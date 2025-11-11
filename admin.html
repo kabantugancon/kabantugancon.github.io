@@ -1,1 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Company Admin</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>Construction Company Admin</h1>
+            <p>Manage Projects and Images</p>
+        </header>
 
+        <div class="admin-content">
+            <!-- Project Form -->
+            <section class="form-section">
+                <h2>Add New Project</h2>
+                <form id="projectForm" class="project-form">
+                    <div class="form-group">
+                        <label for="title">Project Title *</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="residential">Residential</option>
+                                <option value="commercial">Commercial</option>
+                                <option value="renovation">Renovation</option>
+                                <option value="custom-homes">Custom Homes</option>
+                                <option value="kitchen-bath">Kitchen & Bath</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option value="completed">Completed</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="planned">Planned</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientName">Client Name</label>
+                            <input type="text" id="clientName" name="client_name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" name="location">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" id="startDate" name="start_date">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" name="end_date">
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="featured" name="featured">
+                        <label for="featured">Featured Project</label>
+                    </div>
+
+                    <!-- Image Upload Section -->
+                    <div class="form-group">
+                        <label for="images">Project Images *</label>
+                        <input type="file" id="images" name="images" multiple accept="image/*" required>
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span class="btn-text">Create Project</span>
+                        <span class="btn-loading" style="display: none;">
+                            <span class="spinner"></span> Creating Project...
+                        </span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Existing Projects Section -->
+            <section class="projects-section">
+                <h2>Existing Projects</h2>
+                <div id="projectsList" class="projects-list">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Notification System -->
+        <div id="notification" class="notification hidden">
+            <span id="notificationMessage"></span>
+            <button onclick="hideNotification()" class="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
