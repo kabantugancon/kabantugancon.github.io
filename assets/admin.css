@@ -22,8 +22,8 @@ body {
 }
 
 .logo {
-    width: 200px; /* Default size */
-    height: 160px;
+    width: 100%; /* Default size */
+    height: 100%;
     background-color: var(--amber);
     display: flex;
     align-items: center;
