@@ -38,7 +38,7 @@ function handleImagePreview(event) {
       reader.onload = e => {
         const img = document.createElement('img');
         img.src = e.target.result;
-        img.className = 'preview-image';
+        img.className = 'preview-image cell';
         imagePreview.appendChild(img);
       };
       reader.readAsDataURL(file);
@@ -153,15 +153,15 @@ function displayProjects(projects) {
     <div class="project-item">
       <div class="project-header">
         <h3>${project.title}</h3>
-        <div>
-          <button onclick="editProject('${project.id}')">✏️ Edit</button>
-          <button onclick="deleteProject('${project.id}')">🗑️ Delete</button>
+        <div class="project-actions">
+          <button class="button warning small" onclick="editProject('${project.id}')">✏️ Edit</button>
+          <button class="button alert small" onclick="deleteProject('${project.id}')">🗑️ Delete</button>
         </div>
       </div>
       <div class="project-meta">
-        <span>${project.category}</span>
-        <span class="${project.status}">${project.status}</span>
-        ${project.featured ? '<span>⭐ Featured</span>' : ''}
+        <span class="project-category">${project.category}</span>
+        <span class="project-status ${project.status}">${project.status}</span>
+        ${project.featured ? '<span class="badge primary">⭐ Featured</span>' : ''}
       </div>
       <p>${project.description || ''}</p>
       ${project.project_images?.length ? `
@@ -183,8 +183,8 @@ function displayProjects(projects) {
             />
     
             <div class="image-actions">
-              <button onclick="saveImageLabel('${img.id}')">💾 Save Label</button>
-              <button onclick="removeImage('${img.id}', '${img.image_url}')">🗑️ Remove</button>
+              <button class="button success tiny" onclick="saveImageLabel('${img.id}')">💾 Save Label</button>
+              <button class="button alert tiny" onclick="removeImage('${img.id}', '${img.image_url}')">🗑️ Remove</button>
             </div>
           </div>
         `).join('')}
@@ -352,4 +352,3 @@ window.editProject = editProject;
 window.removeImage = removeImage;
 window.hideNotification = hideNotification;
 window.saveImageLabel = saveImageLabel;
-
