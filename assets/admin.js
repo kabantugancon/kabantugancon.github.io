@@ -252,9 +252,9 @@ function extractStoragePath(url) {
 // Delete a project and all its images
 async function deleteProject(projectId) {
   if (!confirm('Delete this project and all its images?')) return;
-  
+
   setLoadingState(true);
-  
+
   try {
     // Step 1: Get all images for this project
     const { data: images, error: imagesError } = await client
@@ -264,21 +264,34 @@ async function deleteProject(projectId) {
     
     if (imagesError) throw imagesError;
 
-    // Step 2: Delete images from storage
+    // Step 2: Delete images from storage (one by one, similar to removeImage)
     if (images && images.length > 0) {
-      const filesToDelete = images.map(img => extractStoragePath(img.image_url)).filter(path => path);
-      
-      if (filesToDelete.length > 0) {
-        const { error: storageError } = await client.storage
-          .from('project-images')
-          .remove(filesToDelete);
-        
-        if (storageError) {
-          console.error('Error deleting images from storage:', storageError);
-          // Continue with project deletion even if storage cleanup fails
+      for (let image of images) {
+        const filePath = extractStoragePath(image.image_url);
+        if (filePath) {
+          const { error: storageError } = await client.storage.from('project-images').remove([filePath]);
+          if (storageError) console.error('Storage delete error for image:', image.id, storageError);
         }
       }
     }
+
+    // Step 3: Delete the project (this will cascade delete project_images records)
+    const { error: projectError } = await client
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+    
+    if (projectError) throw projectError;
+
+    showNotification('Project and all associated images deleted successfully', 'success');
+    loadProjects();
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    showNotification('Error deleting project: ' + error.message, 'error');
+  } finally {
+    setLoadingState(false);
+  }
+}
 
     // Step 3: Delete the project (this will cascade delete project_images records due to foreign key)
     const { error: projectError } = await client
