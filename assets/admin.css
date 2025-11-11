@@ -23,7 +23,7 @@ body {
 
 .logo {
     width: 100%; /* Default size */
-    height: 100%;
+    height: auto;
     background-color: var(--amber);
     display: flex;
     align-items: center;
@@ -36,7 +36,7 @@ body {
 
 .logo-image {
     width: 100%;
-    height: 100%;
+    height: auto;
     object-fit: contain; /* This will maintain aspect ratio */
 }
 
