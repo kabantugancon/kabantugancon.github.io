@@ -293,24 +293,6 @@ async function deleteProject(projectId) {
   }
 }
 
-    // Step 3: Delete the project (this will cascade delete project_images records due to foreign key)
-    const { error: projectError } = await client
-      .from('projects')
-      .delete()
-      .eq('id', projectId);
-    
-    if (projectError) throw projectError;
-
-    showNotification('Project and all associated images deleted successfully', 'success');
-    loadProjects();
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    showNotification('Error deleting project: ' + error.message, 'error');
-  } finally {
-    setLoadingState(false);
-  }
-}
-
 // Save or update an image label
 async function saveImageLabel(imageId) {
   const labelInput = document.getElementById(`label-${imageId}`);
