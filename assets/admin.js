@@ -2,22 +2,28 @@
 const supabaseUrl = 'https://zjalerwvsykfeyvoxpmg.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWxlcnd2c3lrZmV5dm94cG1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MjQ1ODgsImV4cCI6MjA3ODQwMDU4OH0.D3mYWx8fo8XskZ65Pc7mQCkRy042TZ7u4KjiqY6faWY';
 
+// Initialize Supabase client
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // DOM Elements
-const projectForm = document.getElementById('projectForm');
-const imagesInput = document.getElementById('images');
-const imagePreview = document.getElementById('imagePreview');
-const projectsList = document.getElementById('projectsList');
-const submitBtn = document.getElementById('submitBtn');
-const btnText = submitBtn.querySelector('.btn-text');
-const btnLoading = submitBtn.querySelector('.btn-loading');
+let projectForm, imagesInput, imagePreview, projectsList, submitBtn, btnText, btnLoading;
 
 // Initialize the admin panel
 document.addEventListener('DOMContentLoaded', function() {
+    initializeElements();
     loadProjects();
     setupEventListeners();
 });
+
+function initializeElements() {
+    projectForm = document.getElementById('projectForm');
+    imagesInput = document.getElementById('images');
+    imagePreview = document.getElementById('imagePreview');
+    projectsList = document.getElementById('projectsList');
+    submitBtn = document.getElementById('submitBtn');
+    btnText = submitBtn.querySelector('.btn-text');
+    btnLoading = submitBtn.querySelector('.btn-loading');
+}
 
 function setupEventListeners() {
     // Image preview functionality
