@@ -164,15 +164,21 @@ function displayProjects(projects) {
       </div>
       <p>${project.description || ''}</p>
       ${project.project_images?.length ? `
-        <div class="project-images">
-          ${project.project_images.map(img => `
-            <div class="project-image-wrapper">
-              <img src="${img.image_url}" class="project-image">
-              <button onclick="removeImage('${img.id}', '${img.image_url}')">Remove</button>
-            </div>
-          `).join('')}
+  <div class="project-images">
+      ${project.project_images.map(img => `
+        <div class="project-image-wrapper">
+          <img src="${img.image_url}" class="project-image">
+          <input type="text" id="label-${img.id}" value="${img.label || ''}" 
+                 placeholder="Add label (e.g. Kitchen, Living Room)" 
+                 class="image-label-input" />
+          <div class="image-actions">
+            <button onclick="saveImageLabel('${img.id}')">💾 Save Label</button>
+            <button onclick="removeImage('${img.id}', '${img.image_url}')">🗑️ Remove</button>
+          </div>
         </div>
-      ` : '<p>No images</p>'}
+      `).join('')}
+    </div>
+  ` : '<p>No images</p>'}
     </div>
   `).join('');
 }
@@ -245,6 +251,25 @@ async function deleteProject(projectId) {
   }
 }
 
+// Save or update an image label
+async function saveImageLabel(imageId) {
+  const labelInput = document.getElementById(`label-${imageId}`);
+  const newLabel = labelInput.value.trim();
+
+  try {
+    const { error } = await client
+      .from('project_images')
+      .update({ label: newLabel })
+      .eq('id', imageId);
+
+    if (error) throw error;
+    showNotification('Image label updated successfully.', 'success');
+  } catch (error) {
+    console.error('Error saving image label:', error);
+    showNotification('Failed to save image label: ' + error.message, 'error');
+  }
+}
+
 function resetForm() {
   projectForm.reset();
   imagePreview.innerHTML = '';
@@ -283,3 +308,5 @@ window.deleteProject = deleteProject;
 window.editProject = editProject;
 window.removeImage = removeImage;
 window.hideNotification = hideNotification;
+window.saveImageLabel = saveImageLabel;
+
