@@ -130,7 +130,8 @@ async function loadProjects() {
       *,
       project_images (
         id,
-        image_url
+        image_url,
+        label
       )
     `).order('created_at', { ascending: false });
 
