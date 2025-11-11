@@ -3,7 +3,7 @@ const supabaseUrl = 'https://zjalerwvsykfeyvoxpmg.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWxlcnd2c3lrZmV5dm94cG1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MjQ1ODgsImV4cCI6MjA3ODQwMDU4OH0.D3mYWx8fo8XskZ65Pc7mQCkRy042TZ7u4KjiqY6faWY';
 
 // Initialize Supabase client
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 // DOM Elements
 let projectForm, imagesInput, imagePreview, projectsList, submitBtn, btnText, btnLoading;
@@ -26,18 +26,15 @@ function initializeElements() {
 }
 
 function setupEventListeners() {
-    // Image preview functionality
     imagesInput.addEventListener('change', handleImagePreview);
-    
-    // Form submission
     projectForm.addEventListener('submit', handleFormSubmit);
 }
 
-// Handle image preview
+// Image preview before upload
 function handleImagePreview(event) {
     imagePreview.innerHTML = '';
     const files = event.target.files;
-    
+
     for (let file of files) {
         if (file.type.startsWith('image/')) {
             const reader = new FileReader();
@@ -53,23 +50,22 @@ function handleImagePreview(event) {
     }
 }
 
-// Handle form submission
+// Handle project form submission
 async function handleFormSubmit(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const images = imagesInput.files;
-    
+
     if (images.length === 0) {
         showNotification('Please select at least one image', 'error');
         return;
     }
-    
-    // Show loading state
+
     setLoadingState(true);
-    
+
     try {
-        // Create project in database
+        // Prepare project data
         const projectData = {
             title: formData.get('title'),
             description: formData.get('description'),
@@ -81,26 +77,25 @@ async function handleFormSubmit(event) {
             end_date: formData.get('end_date') || null,
             featured: formData.get('featured') === 'on'
         };
-        
-        const { data: project, error: projectError } = await supabase
+
+        // Insert project into database
+        const { data: project, error: projectError } = await client
             .from('projects')
             .insert([projectData])
             .select()
             .single();
-            
+
         if (projectError) throw projectError;
-        
-        // Upload images
+
+        // Upload associated images
         await uploadProjectImages(project.id, images);
-        
-        // Reset form and show success message
+
+        // Reset form and reload
         projectForm.reset();
         imagePreview.innerHTML = '';
         showNotification('Project created successfully!', 'success');
-        
-        // Reload projects list
         loadProjects();
-        
+
     } catch (error) {
         console.error('Error creating project:', error);
         showNotification('Error creating project: ' + error.message, 'error');
@@ -109,30 +104,30 @@ async function handleFormSubmit(event) {
     }
 }
 
-// Upload images to Supabase Storage
+// Upload images to Supabase Storage and link to database
 async function uploadProjectImages(projectId, images) {
     for (let i = 0; i < images.length; i++) {
         const imageFile = images[i];
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${projectId}/${Date.now()}-${i}.${fileExt}`;
-        
+
         // Upload to Supabase Storage
-        const { data, error } = await supabase.storage
+        const { data, error } = await client.storage
             .from('project-images')
             .upload(fileName, imageFile);
-        
+
         if (error) {
             console.error('Error uploading image:', error);
             continue;
         }
-        
+
         // Get public URL
-        const { data: { publicUrl } } = supabase.storage
+        const { data: { publicUrl } } = client.storage
             .from('project-images')
             .getPublicUrl(fileName);
-        
-        // Insert into project_images table
-        const { error: dbError } = await supabase
+
+        // Save image record to database
+        const { error: dbError } = await client
             .from('project_images')
             .insert({
                 project_id: projectId,
@@ -141,19 +136,19 @@ async function uploadProjectImages(projectId, images) {
                 is_primary: i === 0,
                 display_order: i
             });
-        
+
         if (dbError) {
             console.error('Error saving image to database:', dbError);
         }
     }
 }
 
-// Load all projects from database
+// Load all projects
 async function loadProjects() {
     projectsList.innerHTML = '<div class="loading">Loading projects...</div>';
-    
+
     try {
-        const { data: projects, error } = await supabase
+        const { data: projects, error } = await client
             .from('projects')
             .select(`
                 *,
@@ -163,24 +158,23 @@ async function loadProjects() {
                 )
             `)
             .order('created_at', { ascending: false });
-        
+
         if (error) throw error;
-        
         displayProjects(projects);
-        
+
     } catch (error) {
         console.error('Error loading projects:', error);
         projectsList.innerHTML = '<div class="error">Error loading projects</div>';
     }
 }
 
-// Display projects in the list
+// Display projects in the admin list
 function displayProjects(projects) {
     if (!projects || projects.length === 0) {
         projectsList.innerHTML = '<div class="no-projects">No projects found. Create your first project above!</div>';
         return;
     }
-    
+
     projectsList.innerHTML = projects.map(project => `
         <div class="project-item">
             <div class="project-header">
@@ -208,31 +202,28 @@ function displayProjects(projects) {
     `).join('');
 }
 
-// Delete a project
+// Delete project
 async function deleteProject(projectId) {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-        return;
-    }
-    
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+
     try {
-        // Delete project (this will cascade delete images due to ON DELETE CASCADE)
-        const { error } = await supabase
+        const { error } = await client
             .from('projects')
             .delete()
             .eq('id', projectId);
-        
+
         if (error) throw error;
-        
+
         showNotification('Project deleted successfully!', 'success');
         loadProjects();
-        
+
     } catch (error) {
         console.error('Error deleting project:', error);
         showNotification('Error deleting project: ' + error.message, 'error');
     }
 }
 
-// Utility functions
+// Utility: Loading state
 function setLoadingState(isLoading) {
     if (isLoading) {
         btnText.style.display = 'none';
@@ -245,25 +236,22 @@ function setLoadingState(isLoading) {
     }
 }
 
+// Utility: Notifications
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
     const messageEl = document.getElementById('notificationMessage');
-    
     notification.className = `notification ${type}`;
     messageEl.textContent = message;
     notification.classList.remove('hidden');
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        hideNotification();
-    }, 5000);
+
+    setTimeout(() => hideNotification(), 5000);
 }
 
 function hideNotification() {
-    const notification = document.getElementById('notification');
-    notification.classList.add('hidden');
+    document.getElementById('notification').classList.add('hidden');
 }
 
+// Utility: Format date
 function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -272,6 +260,6 @@ function formatDate(dateString) {
     });
 }
 
-// Make functions globally available for onclick handlers
+// Expose functions to global scope (for inline onclick)
 window.deleteProject = deleteProject;
 window.hideNotification = hideNotification;
