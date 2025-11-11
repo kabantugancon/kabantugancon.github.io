@@ -46,7 +46,7 @@ function handleImagePreview(event) {
   }
 }
 
-// CREATE / UPDATE Project
+// CREATE or UPDATE project
 async function handleFormSubmit(event) {
   event.preventDefault();
   const formData = new FormData(event.target);
@@ -63,23 +63,29 @@ async function handleFormSubmit(event) {
     featured: formData.get('featured') === 'on'
   };
 
+  // Remove image requirement if editing
+  if (!editMode && images.length === 0) {
+    showNotification('Please select at least one image for new projects.', 'error');
+    return;
+  }
+
   setLoadingState(true);
+
   try {
-    let project;
     if (!editMode) {
       // CREATE
       const { data, error } = await client.from('projects').insert([projectData]).select().single();
       if (error) throw error;
-      project = data;
-      await uploadProjectImages(project.id, images);
+      if (images.length > 0) await uploadProjectImages(data.id, images);
       showNotification('Project created successfully!', 'success');
     } else {
-      // UPDATE
+      // UPDATE — no need to upload images unless provided
       const { error } = await client.from('projects').update(projectData).eq('id', editingProjectId);
       if (error) throw error;
       if (images.length > 0) await uploadProjectImages(editingProjectId, images);
       showNotification('Project updated successfully!', 'success');
     }
+
     resetForm();
     loadProjects();
   } catch (error) {
@@ -90,17 +96,19 @@ async function handleFormSubmit(event) {
   }
 }
 
-// Upload Images
+// Upload project images to Supabase Storage
 async function uploadProjectImages(projectId, images) {
   for (let i = 0; i < images.length; i++) {
     const imageFile = images[i];
     const fileExt = imageFile.name.split('.').pop();
     const fileName = `${projectId}/${Date.now()}-${i}.${fileExt}`;
     const { error: uploadError } = await client.storage.from('project-images').upload(fileName, imageFile);
+
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      console.error('Error uploading image:', uploadError);
       continue;
     }
+
     const { data: { publicUrl } } = client.storage.from('project-images').getPublicUrl(fileName);
     const { error: dbError } = await client.from('project_images').insert({
       project_id: projectId,
@@ -109,11 +117,12 @@ async function uploadProjectImages(projectId, images) {
       is_primary: i === 0,
       display_order: i
     });
-    if (dbError) console.error('DB image insert error:', dbError);
+
+    if (dbError) console.error('Error saving image to database:', dbError);
   }
 }
 
-// READ Projects
+// Load and display projects
 async function loadProjects() {
   projectsList.innerHTML = '<div class="loading">Loading projects...</div>';
   try {
@@ -124,20 +133,21 @@ async function loadProjects() {
         image_url
       )
     `).order('created_at', { ascending: false });
+
     if (error) throw error;
     displayProjects(projects);
   } catch (error) {
-    console.error('Load error:', error);
+    console.error('Error loading projects:', error);
     projectsList.innerHTML = '<div class="error">Error loading projects</div>';
   }
 }
 
-// Display Projects
 function displayProjects(projects) {
   if (!projects || projects.length === 0) {
     projectsList.innerHTML = '<div class="no-projects">No projects yet</div>';
     return;
   }
+
   projectsList.innerHTML = projects.map(project => `
     <div class="project-item">
       <div class="project-header">
@@ -158,7 +168,7 @@ function displayProjects(projects) {
           ${project.project_images.map(img => `
             <div class="project-image-wrapper">
               <img src="${img.image_url}" class="project-image">
-              <button onclick="removeImage('${img.id}')">Remove</button>
+              <button onclick="removeImage('${img.id}', '${img.image_url}')">Remove</button>
             </div>
           `).join('')}
         </div>
@@ -167,12 +177,14 @@ function displayProjects(projects) {
   `).join('');
 }
 
-// EDIT Project
+// Edit existing project
 async function editProject(projectId) {
   editMode = true;
   editingProjectId = projectId;
+
   const { data: project, error } = await client.from('projects').select('*').eq('id', projectId).single();
   if (error) return showNotification('Error loading project', 'error');
+
   projectForm.scrollIntoView({ behavior: 'smooth' });
   document.getElementById('title').value = project.title;
   document.getElementById('description').value = project.description || '';
@@ -183,23 +195,44 @@ async function editProject(projectId) {
   document.getElementById('startDate').value = project.start_date || '';
   document.getElementById('endDate').value = project.end_date || '';
   document.getElementById('featured').checked = project.featured;
+
   btnText.textContent = 'Update Project';
 }
 
-// REMOVE Image
-async function removeImage(imageId) {
-  if (!confirm('Remove this image?')) return;
+// Remove image from both DB and Supabase storage
+async function removeImage(imageId, imageUrl) {
+  if (!confirm('Remove this image permanently?')) return;
+
   try {
-    const { data, error } = await client.from('project_images').delete().eq('id', imageId);
-    if (error) throw error;
-    showNotification('Image removed', 'success');
+    // Step 1: delete DB record
+    const { error: dbError } = await client.from('project_images').delete().eq('id', imageId);
+    if (dbError) throw dbError;
+
+    // Step 2: remove from storage
+    const filePath = extractStoragePath(imageUrl);
+    if (filePath) {
+      const { error: storageError } = await client.storage.from('project-images').remove([filePath]);
+      if (storageError) console.error('Storage delete error:', storageError);
+    }
+
+    showNotification('Image removed successfully.', 'success');
     loadProjects();
   } catch (error) {
     showNotification('Error removing image: ' + error.message, 'error');
   }
 }
 
-// DELETE Project
+// Extract storage path from public URL
+function extractStoragePath(url) {
+  try {
+    const parts = url.split('/storage/v1/object/public/project-images/');
+    return parts.length > 1 ? parts[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+// Delete a project
 async function deleteProject(projectId) {
   if (!confirm('Delete this project and all its images?')) return;
   try {
@@ -245,6 +278,7 @@ function hideNotification() {
   document.getElementById('notification').classList.add('hidden');
 }
 
+// Expose global functions
 window.deleteProject = deleteProject;
 window.editProject = editProject;
 window.removeImage = removeImage;
