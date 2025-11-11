@@ -249,16 +249,52 @@ function extractStoragePath(url) {
   }
 }
 
-// Delete a project
+// Delete a project and all its images
 async function deleteProject(projectId) {
   if (!confirm('Delete this project and all its images?')) return;
+  
+  setLoadingState(true);
+  
   try {
-    const { error } = await client.from('projects').delete().eq('id', projectId);
-    if (error) throw error;
-    showNotification('Project deleted successfully', 'success');
+    // Step 1: Get all images for this project
+    const { data: images, error: imagesError } = await client
+      .from('project_images')
+      .select('id, image_url')
+      .eq('project_id', projectId);
+    
+    if (imagesError) throw imagesError;
+
+    // Step 2: Delete images from storage
+    if (images && images.length > 0) {
+      const filesToDelete = images.map(img => extractStoragePath(img.image_url)).filter(path => path);
+      
+      if (filesToDelete.length > 0) {
+        const { error: storageError } = await client.storage
+          .from('project-images')
+          .remove(filesToDelete);
+        
+        if (storageError) {
+          console.error('Error deleting images from storage:', storageError);
+          // Continue with project deletion even if storage cleanup fails
+        }
+      }
+    }
+
+    // Step 3: Delete the project (this will cascade delete project_images records due to foreign key)
+    const { error: projectError } = await client
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+    
+    if (projectError) throw projectError;
+
+    showNotification('Project and all associated images deleted successfully', 'success');
     loadProjects();
   } catch (error) {
+    console.error('Error deleting project:', error);
     showNotification('Error deleting project: ' + error.message, 'error');
+  } finally {
+    setLoadingState(false);
   }
 }
 
