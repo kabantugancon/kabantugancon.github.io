@@ -389,6 +389,199 @@ body {
     }
 }
 
+/* Mobile Header & Floating Menu Styles */
+.navbar-brand.is-hidden-tablet {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+.mobile-logo {
+    width: 100%;
+    max-width: none;
+    display: flex;
+    justify-content: center;
+}
+
+.mobile-logo img {
+    max-height: 70px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Mobile Menu Floating Button */
+.mobile-menu-trigger {
+    position: fixed;
+    bottom: 5rem;
+    right: 1.5rem;
+    z-index: 1001;
+}
+
+.floating-menu-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    box-shadow: 0 8px 25px rgba(254, 193, 9, 0.4);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.floating-menu-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 35px rgba(254, 193, 9, 0.6);
+}
+
+.floating-menu-btn .icon {
+    font-size: 1.5rem;
+}
+
+/* Floating Mobile Menu */
+.floating-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.floating-menu.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.floating-menu-content {
+    background: var(--white);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.floating-menu.is-active .floating-menu-content {
+    transform: translateY(0);
+}
+
+.floating-menu-header {
+    background: var(--amber);
+    color: var(--black-olive);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--vanilla);
+}
+
+.floating-menu-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.floating-menu-close {
+    background: transparent;
+    border: none;
+    color: var(--black-olive);
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.floating-menu-close:hover {
+    background: var(--vanilla);
+}
+
+.floating-menu-items {
+    padding: 1rem 0;
+}
+
+.floating-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    color: var(--black-olive);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.floating-menu-item:last-child {
+    border-bottom: none;
+}
+
+.floating-menu-item:hover {
+    background: var(--amber-light);
+    color: var(--black-olive);
+    transform: translateX(5px);
+}
+
+.floating-menu-item .icon {
+    width: 2rem;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+    color: var(--amber);
+}
+
+.floating-menu-item span {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Desktop Navigation Adjustments */
+.navbar-menu.is-hidden-touch {
+    width: 100%;
+}
+
+.navbar-start .logo img {
+    max-height: 60px;
+}
+
+/* Animation for menu items */
+.floating-menu-item {
+    animation: slideInRight 0.4s ease backwards;
+}
+
+.floating-menu-item:nth-child(1) { animation-delay: 0.1s; }
+.floating-menu-item:nth-child(2) { animation-delay: 0.15s; }
+.floating-menu-item:nth-child(3) { animation-delay: 0.2s; }
+.floating-menu-item:nth-child(4) { animation-delay: 0.25s; }
+.floating-menu-item:nth-child(5) { animation-delay: 0.3s; }
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Prevent body scroll when menu is open */
+body.menu-open {
+    overflow: hidden;
+}
+
+/* WhatsApp button positioning adjustment */
+body.menu-open .whatsapp-float {
+    z-index: 1003;
+}
+
+
 @media (min-width: 769px) and (max-width: 1023px) {
     .hero-title {
         font-size: 3rem;
@@ -426,4 +619,33 @@ body {
 
 .has-text-amber {
     color: var(--amber) !important;
+}
+
+.navbar {
+        padding: 0;
+    }
+    
+    .navbar-brand.is-hidden-tablet {
+        padding: 1rem 0;
+        background: var(--white);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .mobile-logo img {
+        max-height: 80px;
+    }
+    
+    .hero {
+        margin-top: 0;
+    }
+    
+    /* Adjust hero to account for mobile header */
+    .hero.is-fullheight-with-navbar {
+        min-height: calc(100vh - 120px);
+    }
+    
+    /* Ensure content doesn't hide behind fixed elements */
+    .section:first-of-type {
+        padding-top: 2rem;
+    }
 }
