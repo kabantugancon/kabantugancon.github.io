@@ -96,31 +96,57 @@ async function handleFormSubmit(event) {
   }
 }
 
-// Upload project images to Supabase Storage
+// Upload project images to Supabase Storage (with 70% compression)
 async function uploadProjectImages(projectId, images) {
+  const compressionOptions = {
+    maxSizeMB: 1,              // Limit to ~1MB
+    maxWidthOrHeight: 1920,    // Resize large images
+    useWebWorker: true,        // Run compression in a web worker
+    initialQuality: 0.7        // ✅ Compress to ~70% of original quality
+  };
+
   for (let i = 0; i < images.length; i++) {
-    const imageFile = images[i];
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${projectId}/${Date.now()}-${i}.${fileExt}`;
-    const { error: uploadError } = await client.storage.from('project-images').upload(fileName, imageFile);
+    try {
+      const imageFile = images[i];
 
-    if (uploadError) {
-      console.error('Error uploading image:', uploadError);
-      continue;
+      // 🔹 Compress before upload
+      const compressedFile = await imageCompression(imageFile, compressionOptions);
+      console.log(
+        `Compressed ${imageFile.name}:`,
+        `${(imageFile.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`
+      );
+
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${projectId}/${Date.now()}-${i}.${fileExt}`;
+
+      // 🔹 Upload compressed image
+      const { error: uploadError } = await client.storage
+        .from('project-images')
+        .upload(fileName, compressedFile);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        continue;
+      }
+
+      // 🔹 Save image record in DB
+      const { data: { publicUrl } } = client.storage.from('project-images').getPublicUrl(fileName);
+      const { error: dbError } = await client.from('project_images').insert({
+        project_id: projectId,
+        image_url: publicUrl,
+        image_name: imageFile.name,
+        is_primary: i === 0,
+        display_order: i
+      });
+
+      if (dbError) console.error('Error saving image to database:', dbError);
+
+    } catch (err) {
+      console.error('Compression/upload failed for image:', err);
     }
-
-    const { data: { publicUrl } } = client.storage.from('project-images').getPublicUrl(fileName);
-    const { error: dbError } = await client.from('project_images').insert({
-      project_id: projectId,
-      image_url: publicUrl,
-      image_name: imageFile.name,
-      is_primary: i === 0,
-      display_order: i
-    });
-
-    if (dbError) console.error('Error saving image to database:', dbError);
   }
 }
+
 
 // Load and display projects
 async function loadProjects() {
