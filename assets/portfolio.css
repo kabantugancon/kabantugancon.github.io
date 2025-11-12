@@ -394,7 +394,11 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 0.5rem 0;
+    padding: 0;
+    background: var(--white);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+    min-height: 100px; /* Ensure enough space for logo */
 }
 
 .mobile-logo {
@@ -402,38 +406,45 @@ body {
     max-width: none;
     display: flex;
     justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
 }
 
 .mobile-logo img {
-    max-height: 70px;
+    max-height: 80px;
     width: auto;
+    max-width: 90%; /* Prevent overflow */
     object-fit: contain;
 }
 
-/* Mobile Menu Floating Button */
+/* Mobile Menu Floating Button - Moved to top right */
 .mobile-menu-trigger {
-    position: fixed;
-    bottom: 5rem;
-    right: 1.5rem;
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
     z-index: 1001;
 }
 
 .floating-menu-btn {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    box-shadow: 0 8px 25px rgba(254, 193, 9, 0.4);
+    box-shadow: 0 4px 15px rgba(254, 193, 9, 0.4);
     transition: all 0.3s ease;
     border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .floating-menu-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 12px 35px rgba(254, 193, 9, 0.6);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(254, 193, 9, 0.6);
 }
 
 .floating-menu-btn .icon {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
 }
 
 /* Floating Mobile Menu */
@@ -498,7 +509,9 @@ body {
     padding: 0.5rem;
     border-radius: 50%;
     transition: background-color 0.3s ease;
+    cursor: pointer;
 }
+
 
 .floating-menu-close:hover {
     background: var(--vanilla);
@@ -516,6 +529,7 @@ body {
     text-decoration: none;
     transition: all 0.3s ease;
     border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
 }
 
 .floating-menu-item:last-child {
@@ -539,7 +553,6 @@ body {
     font-size: 1.1rem;
     font-weight: 600;
 }
-
 /* Desktop Navigation Adjustments */
 .navbar-menu.is-hidden-touch {
     width: 100%;
@@ -582,53 +595,14 @@ body.menu-open .whatsapp-float {
 }
 
 
-@media (min-width: 769px) and (max-width: 1023px) {
-    .hero-title {
-        font-size: 3rem;
-    }
-}
-
-/* Animation for smooth transitions */
-.project-item {
-    animation: fadeInUp 0.6s ease;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Custom Bulma overrides */
-.button.is-amber {
-    background-color: var(--amber);
-    color: var(--black-olive);
-    border-color: var(--amber);
-}
-
-.button.is-amber:hover {
-    background-color: var(--goldenrod);
-    color: var(--black-olive);
-    border-color: var(--goldenrod);
-}
-
-.has-text-amber {
-    color: var(--amber) !important;
-}
-
-.navbar {
+@media (max-width: 768px) {
+    .navbar {
         padding: 0;
     }
     
     .navbar-brand.is-hidden-tablet {
-        padding: 1rem 0;
-        background: var(--white);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 0;
+        min-height: 100px;
     }
     
     .mobile-logo img {
@@ -641,11 +615,49 @@ body.menu-open .whatsapp-float {
     
     /* Adjust hero to account for mobile header */
     .hero.is-fullheight-with-navbar {
-        min-height: calc(100vh - 120px);
+        min-height: calc(100vh - 100px);
     }
     
     /* Ensure content doesn't hide behind fixed elements */
     .section:first-of-type {
         padding-top: 2rem;
+    }
+    
+    /* Mobile menu button adjustments */
+    .mobile-menu-trigger {
+        right: 1rem;
+    }
+    
+    .floating-menu-btn {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .floating-menu-btn .icon {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar-brand.is-hidden-tablet {
+        min-height: 90px;
+    }
+    
+    .mobile-logo img {
+        max-height: 70px;
+    }
+    
+    .mobile-menu-trigger {
+        right: 0.75rem;
+    }
+    
+    .floating-menu-btn {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .floating-menu-content {
+        width: 95%;
+        max-height: 85vh;
     }
 }
