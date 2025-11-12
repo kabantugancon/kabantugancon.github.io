@@ -317,7 +317,7 @@ function displayProjects(projects) {
                 onclick="openImageModal('${img.id}', '${img.image_url}', '${img.label || ''}')"
               >
               <div class="image-label">
-                ${img.label ? `<strong>${img.label}</strong>` : '<span class="has-text-grey">(No label)</span>'}
+                ${img.label ? `<strong>${img.label}</strong>` : '<span class="has-text-black">(No label)</span>'}
               </div>
               <div class="image-actions">
                 <button class="button is-small is-success is-outlined" onclick="openImageModal('${img.id}', '${img.image_url}', '${img.label || ''}')">
