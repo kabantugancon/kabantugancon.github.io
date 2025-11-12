@@ -1,380 +1,347 @@
-// Supabase configuration
-const supabaseUrl = 'https://zjalerwvsykfeyvoxpmg.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWxlcnd2c3lrZmV5dm94cG1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MjQ1ODgsImV4cCI6MjA3ODQwMDU4OH0.D3mYWx8fo8XskZ65Pc7mQCkRy042TZ7u4KjiqY6faWY';
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+ons.ready(function() {
+    // Supabase configuration
+    const supabaseUrl = 'https://zjalerwvsykfeyvoxpmg.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWxlcnd2c3lrZmV5dm94cG1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MjQ1ODgsImV4cCI6MjA3ODQwMDU4OH0.D3mYWx8fo8XskZ65Pc7mQCkRy042TZ7u4KjiqY6faWY';
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-// DOM Elements
-let projectForm, imagesInput, imagePreview, projectsList, submitBtn, btnText, btnLoading;
-let editMode = false;
-let editingProjectId = null;
+    let editMode = false;
+    let editingProjectId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  initializeElements();
-  loadProjects();
-  setupEventListeners();
-});
+    document.addEventListener('init', function(event) {
+        var page = event.target;
 
-function initializeElements() {
-  projectForm = document.getElementById('projectForm');
-  imagesInput = document.getElementById('images');
-  imagePreview = document.getElementById('imagePreview');
-  projectsList = document.getElementById('projectsList');
-  submitBtn = document.getElementById('submitBtn');
-  btnText = submitBtn.querySelector('.btn-text');
-  btnLoading = submitBtn.querySelector('.btn-loading');
-}
-
-function setupEventListeners() {
-  imagesInput.addEventListener('change', handleImagePreview);
-  projectForm.addEventListener('submit', handleFormSubmit);
-}
-
-function handleImagePreview(event) {
-  imagePreview.innerHTML = '';
-  const files = event.target.files;
-  for (let file of files) {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.className = 'preview-image cell';
-        imagePreview.appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-}
-
-// CREATE or UPDATE project
-async function handleFormSubmit(event) {
-  event.preventDefault();
-  const formData = new FormData(event.target);
-  const images = imagesInput.files;
-  const projectData = {
-    title: formData.get('title'),
-    description: formData.get('description'),
-    category: formData.get('category'),
-    status: formData.get('status'),
-    client_name: formData.get('client_name'),
-    location: formData.get('location'),
-    start_date: formData.get('start_date') || null,
-    end_date: formData.get('end_date') || null,
-    featured: formData.get('featured') === 'on'
-  };
-
-  // Remove image requirement if editing
-  if (!editMode && images.length === 0) {
-    showNotification('Please select at least one image for new projects.', 'error');
-    return;
-  }
-
-  setLoadingState(true);
-
-  try {
-    if (!editMode) {
-      // CREATE
-      const { data, error } = await client.from('projects').insert([projectData]).select().single();
-      if (error) throw error;
-      if (images.length > 0) await uploadProjectImages(data.id, images);
-      showNotification('Project created successfully!', 'success');
-    } else {
-      // UPDATE — no need to upload images unless provided
-      const { error } = await client.from('projects').update(projectData).eq('id', editingProjectId);
-      if (error) throw error;
-      if (images.length > 0) await uploadProjectImages(editingProjectId, images);
-      showNotification('Project updated successfully!', 'success');
-    }
-
-    resetForm();
-    loadProjects();
-  } catch (error) {
-    console.error(error);
-    showNotification('Error saving project: ' + error.message, 'error');
-  } finally {
-    setLoadingState(false);
-  }
-}
-
-// Upload project images to Supabase Storage (with 70% compression)
-async function uploadProjectImages(projectId, images) {
-  const compressionOptions = {
-    maxSizeMB: 1,              // Limit to ~1MB
-    maxWidthOrHeight: 1920,    // Resize large images
-    useWebWorker: true,        // Run compression in a web worker
-    initialQuality: 0.7        // ✅ Compress to ~70% of original quality
-  };
-
-  for (let i = 0; i < images.length; i++) {
-    try {
-      const imageFile = images[i];
-
-      // 🔹 Compress before upload
-      const compressedFile = await imageCompression(imageFile, compressionOptions);
-      console.log(
-        `Compressed ${imageFile.name}:`,
-        `${(imageFile.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`
-      );
-
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${projectId}/${Date.now()}-${i}.${fileExt}`;
-
-      // 🔹 Upload compressed image
-      const { error: uploadError } = await client.storage
-        .from('project-images')
-        .upload(fileName, compressedFile);
-
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError);
-        continue;
-      }
-
-      // 🔹 Save image record in DB
-      const { data: { publicUrl } } = client.storage.from('project-images').getPublicUrl(fileName);
-      const { error: dbError } = await client.from('project_images').insert({
-        project_id: projectId,
-        image_url: publicUrl,
-        image_name: imageFile.name,
-        is_primary: i === 0,
-        display_order: i
-      });
-
-      if (dbError) console.error('Error saving image to database:', dbError);
-
-    } catch (err) {
-      console.error('Compression/upload failed for image:', err);
-    }
-  }
-}
-
-
-// Load and display projects
-async function loadProjects() {
-  projectsList.innerHTML = '<div class="loading">Loading projects...</div>';
-  try {
-    const { data: projects, error } = await client.from('projects').select(`
-      *,
-      project_images (
-        id,
-        image_url,
-        label
-      )
-    `).order('created_at', { ascending: false });
-
-    if (error) throw error;
-    displayProjects(projects);
-  } catch (error) {
-    console.error('Error loading projects:', error);
-    projectsList.innerHTML = '<div class="error">Error loading projects</div>';
-  }
-}
-
-function displayProjects(projects) {
-  if (!projects || projects.length === 0) {
-    projectsList.innerHTML = '<div class="no-projects">No projects yet</div>';
-    return;
-  }
-
-  projectsList.innerHTML = projects.map(project => `
-    <div class="project-item">
-      <div class="project-header">
-        <h3>${project.title}</h3>
-        <div class="project-actions">
-          <button class="button warning small" onclick="editProject('${project.id}')">✏️ Edit</button>
-          <button class="button alert small" onclick="deleteProject('${project.id}')">🗑️ Delete</button>
-        </div>
-      </div>
-      <div class="project-meta">
-        <span class="project-category">${project.category}</span>
-        <span class="project-status ${project.status}">${project.status}</span>
-        ${project.featured ? '<span class="badge primary">⭐ Featured</span>' : ''}
-      </div>
-      <p>${project.description || ''}</p>
-      ${project.project_images?.length ? `
-      <div class="project-images">
-        ${project.project_images.map(img => `
-          <div class="project-image-wrapper">
-            <img src="${img.image_url}" class="project-image">
-    
-            ${img.label 
-              ? `<p class="image-label-display"><strong>Label:</strong> ${img.label}</p>` 
-              : `<p class="image-label-display muted">(No label yet)</p>`}
-    
-            <input 
-              type="text" 
-              id="label-${img.id}" 
-              value="${img.label || ''}" 
-              placeholder="Edit or add label (e.g. Kitchen, Living Room)" 
-              class="image-label-input" 
-            />
-    
-            <div class="image-actions">
-              <button class="button success tiny" onclick="saveImageLabel('${img.id}')">💾 Save Label</button>
-              <button class="button alert tiny" onclick="removeImage('${img.id}', '${img.image_url}')">🗑️ Remove</button>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    ` : '<p>No images</p>'}
-    </div>
-  `).join('');
-}
-
-// Edit existing project
-async function editProject(projectId) {
-  editMode = true;
-  editingProjectId = projectId;
-
-  const { data: project, error } = await client.from('projects').select('*').eq('id', projectId).single();
-  if (error) return showNotification('Error loading project', 'error');
-
-  projectForm.scrollIntoView({ behavior: 'smooth' });
-  document.getElementById('title').value = project.title;
-  document.getElementById('description').value = project.description || '';
-  document.getElementById('category').value = project.category;
-  document.getElementById('status').value = project.status;
-  document.getElementById('clientName').value = project.client_name || '';
-  document.getElementById('location').value = project.location || '';
-  document.getElementById('startDate').value = project.start_date || '';
-  document.getElementById('endDate').value = project.end_date || '';
-  document.getElementById('featured').checked = project.featured;
-
-  btnText.textContent = 'Update Project';
-}
-
-// Remove image from both DB and Supabase storage
-async function removeImage(imageId, imageUrl) {
-  if (!confirm('Remove this image permanently?')) return;
-
-  try {
-    // Step 1: delete DB record
-    const { error: dbError } = await client.from('project_images').delete().eq('id', imageId);
-    if (dbError) throw dbError;
-
-    // Step 2: remove from storage
-    const filePath = extractStoragePath(imageUrl);
-    if (filePath) {
-      const { error: storageError } = await client.storage.from('project-images').remove([filePath]);
-      if (storageError) console.error('Storage delete error:', storageError);
-    }
-
-    showNotification('Image removed successfully.', 'success');
-    loadProjects();
-  } catch (error) {
-    showNotification('Error removing image: ' + error.message, 'error');
-  }
-}
-
-// Extract storage path from public URL
-function extractStoragePath(url) {
-  try {
-    const parts = url.split('/storage/v1/object/public/project-images/');
-    return parts.length > 1 ? parts[1] : null;
-  } catch {
-    return null;
-  }
-}
-
-// Delete a project and all its images
-async function deleteProject(projectId) {
-  if (!confirm('Delete this project and all its images?')) return;
-
-  setLoadingState(true);
-
-  try {
-    // Step 1: Get all images for this project
-    const { data: images, error: imagesError } = await client
-      .from('project_images')
-      .select('id, image_url')
-      .eq('project_id', projectId);
-    
-    if (imagesError) throw imagesError;
-
-    // Step 2: Delete images from storage (one by one, similar to removeImage)
-    if (images && images.length > 0) {
-      for (let image of images) {
-        const filePath = extractStoragePath(image.image_url);
-        if (filePath) {
-          const { error: storageError } = await client.storage.from('project-images').remove([filePath]);
-          if (storageError) console.error('Storage delete error for image:', image.id, storageError);
+        if (page.id === 'create-project-page') {
+            const projectForm = document.getElementById('projectForm');
+            projectForm.addEventListener('submit', handleFormSubmit);
+            document.getElementById('images').addEventListener('change', handleImagePreview);
+        } else if (page.id === 'existing-projects-page') {
+            loadProjects();
         }
-      }
+    });
+
+    function handleImagePreview(event) {
+        const imagePreview = document.getElementById('imagePreview');
+        imagePreview.innerHTML = '';
+        const files = event.target.files;
+        for (let file of files) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-image';
+                    imagePreview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
     }
 
-    // Step 3: Delete the project (this will cascade delete project_images records)
-    const { error: projectError } = await client
-      .from('projects')
-      .delete()
-      .eq('id', projectId);
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const images = document.getElementById('images').files;
+        const projectData = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            category: formData.get('category'),
+            status: formData.get('status'),
+            client_name: formData.get('client_name'),
+            location: formData.get('location'),
+            start_date: formData.get('start_date') || null,
+            end_date: formData.get('end_date') || null,
+            featured: formData.get('featured') === 'on'
+        };
+
+        if (images.length === 0) {
+            ons.notification.alert('Please select at least one image for new projects.');
+            return;
+        }
+
+        setLoadingState(true, 'submitBtn');
+
+        try {
+            const { data, error } = await client.from('projects').insert([projectData]).select().single();
+            if (error) throw error;
+            if (images.length > 0) await uploadProjectImages(data.id, images);
+            ons.notification.toast('Project created successfully!', { timeout: 2000, animation: 'fall' });
+
+            resetForm();
+            loadProjects();
+        } catch (error) {
+            console.error(error);
+            ons.notification.alert('Error saving project: ' + error.message);
+        } finally {
+            setLoadingState(false, 'submitBtn');
+        }
+    }
+
+    async function uploadProjectImages(projectId, images) {
+        const compressionOptions = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+            initialQuality: 0.7
+        };
+
+        for (let i = 0; i < images.length; i++) {
+            try {
+                const imageFile = images[i];
+                const compressedFile = await imageCompression(imageFile, compressionOptions);
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `${projectId}/${Date.now()}-${i}.${fileExt}`;
+                const { error: uploadError } = await client.storage.from('project-images').upload(fileName, compressedFile);
+
+                if (uploadError) {
+                    console.error('Error uploading image:', uploadError);
+                    continue;
+                }
+
+                const { data: { publicUrl } } = client.storage.from('project-images').getPublicUrl(fileName);
+                const { error: dbError } = await client.from('project_images').insert({
+                    project_id: projectId,
+                    image_url: publicUrl,
+                    image_name: imageFile.name,
+                    is_primary: i === 0,
+                    display_order: i
+                });
+
+                if (dbError) console.error('Error saving image to database:', dbError);
+
+            } catch (err) {
+                console.error('Compression/upload failed for image:', err);
+            }
+        }
+    }
+
+    async function loadProjects() {
+        const projectsList = document.getElementById('projectsList');
+        projectsList.innerHTML = '<ons-progress-circular indeterminate></ons-progress-circular>';
+        try {
+            const { data: projects, error } = await client.from('projects').select(`
+              *,
+              project_images (
+                id,
+                image_url,
+                label
+              )
+            `).order('created_at', { ascending: false });
+
+            if (error) throw error;
+            displayProjects(projects);
+        } catch (error) {
+            console.error('Error loading projects:', error);
+            projectsList.innerHTML = '<p>Error loading projects</p>';
+        }
+    }
+
+    function displayProjects(projects) {
+        const projectsList = document.getElementById('projectsList');
+        if (!projects || projects.length === 0) {
+            projectsList.innerHTML = '<p>No projects yet</p>';
+            return;
+        }
+
+        projectsList.innerHTML = projects.map(project => `
+            <ons-card>
+                <div class="title">${project.title}</div>
+                <div class="content">
+                    <p>${project.description || ''}</p>
+                    <div class="project-meta">
+                        <span class="project-category">${project.category}</span>
+                        <span class="project-status ${project.status}">${project.status}</span>
+                        ${project.featured ? '<span class="badge primary">⭐ Featured</span>' : ''}
+                    </div>
+                    <div class="project-images">
+                        ${project.project_images.map(img => `
+                            <div class="project-image-wrapper">
+                                <img src="${img.image_url}" class="project-image">
+                                <ons-input type="text" modifier="underbar" id="label-${img.id}" value="${img.label || ''}" placeholder="Add a label"></ons-input>
+                                <ons-button modifier="quiet" onclick="saveImageLabel('${img.id}')">Save Label</ons-button>
+                                <ons-button modifier="quiet" class="delete-button" onclick="removeImage('${img.id}', '${img.image_url}')">Remove</ons-button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <ons-button modifier="quiet" onclick="editProject('${project.id}')">Edit</ons-button>
+                    <ons-button modifier="quiet" class="delete-button" onclick="deleteProject('${project.id}')">Delete</ons-button>
+                </div>
+            </ons-card>
+        `).join('');
+    }
+
+    window.editProject = async function(projectId) {
+        editMode = true;
+        editingProjectId = projectId;
+
+        const { data: project, error } = await client.from('projects').select('*').eq('id', projectId).single();
+        if (error) {
+            ons.notification.alert('Error loading project');
+            return;
+        }
+
+        const modal = document.getElementById('edit-project-modal');
+        modal.querySelector('#edit-title').value = project.title;
+        modal.querySelector('#edit-description').value = project.description || '';
+        modal.querySelector('#edit-category').value = project.category;
+        modal.querySelector('#edit-status').value = project.status;
+        modal.querySelector('#edit-clientName').value = project.client_name || '';
+        modal.querySelector('#edit-location').value = project.location || '';
+        modal.querySelector('#edit-startDate').value = project.start_date || '';
+        modal.querySelector('#edit-endDate').value = project.end_date || '';
+        modal.querySelector('#edit-featured').checked = project.featured;
+
+        modal.show();
+
+        const editForm = document.getElementById('editProjectForm');
+        editForm.onsubmit = (event) => {
+            event.preventDefault();
+            const formData = new FormData(editForm);
+            const projectData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                category: formData.get('category'),
+                status: formData.get('status'),
+                client_name: formData.get('client_name'),
+                location: formData.get('location'),
+                start_date: formData.get('start_date') || null,
+                end_date: formData.get('end_date') || null,
+                featured: formData.get('featured') === 'on'
+            };
+            const images = document.getElementById('edit-images').files;
+
+            handleUpdate(projectData, images);
+        };
+    }
+
+    async function handleUpdate(projectData, images) {
+        setLoadingState(true, 'updateProjectBtn');
+
+        try {
+            const { error } = await client.from('projects').update(projectData).eq('id', editingProjectId);
+            if (error) throw error;
+            if (images.length > 0) await uploadProjectImages(editingProjectId, images);
+            ons.notification.toast('Project updated successfully!', { timeout: 2000, animation: 'fall' });
+            document.getElementById('edit-project-modal').hide();
+
+            resetForm();
+            loadProjects();
+        } catch (error) {
+            console.error(error);
+            ons.notification.alert('Error updating project: ' + error.message);
+        } finally {
+            setLoadingState(false, 'updateProjectBtn');
+        }
+    }
     
-    if (projectError) throw projectError;
+    window.deleteProject = async function(projectId) {
+        ons.notification.confirm('Delete this project and all its images?')
+            .then(async (response) => {
+                if (response === 1) {
+                    setLoadingState(true);
+                    try {
+                        const { data: images, error: imagesError } = await client.from('project_images').select('id, image_url').eq('project_id', projectId);
+                        if (imagesError) throw imagesError;
 
-    showNotification('Project and all associated images deleted successfully', 'success');
-    loadProjects();
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    showNotification('Error deleting project: ' + error.message, 'error');
-  } finally {
-    setLoadingState(false);
-  }
-}
+                        if (images && images.length > 0) {
+                            for (let image of images) {
+                                const filePath = extractStoragePath(image.image_url);
+                                if (filePath) {
+                                    await client.storage.from('project-images').remove([filePath]);
+                                }
+                            }
+                        }
 
-// Save or update an image label
-async function saveImageLabel(imageId) {
-  const labelInput = document.getElementById(`label-${imageId}`);
-  const newLabel = labelInput.value.trim();
+                        const { error: projectError } = await client.from('projects').delete().eq('id', projectId);
+                        if (projectError) throw projectError;
 
-  try {
-    const { error } = await client
-      .from('project_images')
-      .update({ label: newLabel })
-      .eq('id', imageId);
+                        ons.notification.toast('Project deleted successfully', { timeout: 2000, animation: 'fall' });
+                        loadProjects();
+                    } catch (error) {
+                        console.error('Error deleting project:', error);
+                        ons.notification.alert('Error deleting project: ' + error.message);
+                    } finally {
+                        setLoadingState(false);
+                    }
+                }
+            });
+    }
 
-    if (error) throw error;
-    showNotification('Image label updated successfully.', 'success');
-    loadProjects();
-  } catch (error) {
-    console.error('Error saving image label:', error);
-    showNotification('Failed to save image label: ' + error.message, 'error');
-  }
-}
+    window.saveImageLabel = async function(imageId) {
+        const labelInput = document.getElementById(`label-${imageId}`);
+        const newLabel = labelInput.value.trim();
 
-function resetForm() {
-  projectForm.reset();
-  imagePreview.innerHTML = '';
-  btnText.textContent = 'Create Project';
-  editMode = false;
-  editingProjectId = null;
-}
+        try {
+            const { error } = await client
+                .from('project_images')
+                .update({ label: newLabel })
+                .eq('id', imageId);
 
-function setLoadingState(isLoading) {
-  if (isLoading) {
-    btnText.style.display = 'none';
-    btnLoading.style.display = 'inline';
-    submitBtn.disabled = true;
-  } else {
-    btnText.style.display = 'inline';
-    btnLoading.style.display = 'none';
-    submitBtn.disabled = false;
-  }
-}
+            if (error) throw error;
+            ons.notification.toast('Image label updated successfully.', { timeout: 2000, animation: 'fall' });
+            loadProjects();
+        } catch (error) {
+            console.error('Error saving image label:', error);
+            ons.notification.alert('Failed to save image label: ' + error.message);
+        }
+    }
 
-function showNotification(message, type = 'success') {
-  const notification = document.getElementById('notification');
-  const messageEl = document.getElementById('notificationMessage');
-  notification.className = `notification ${type}`;
-  messageEl.textContent = message;
-  notification.classList.remove('hidden');
-  setTimeout(() => hideNotification(), 4000);
-}
+    window.removeImage = async function(imageId, imageUrl) {
+        ons.notification.confirm('Remove this image permanently?')
+            .then(async (response) => {
+                if (response === 1) {
+                    try {
+                        // Step 1: delete DB record
+                        const { error: dbError } = await client.from('project_images').delete().eq('id', imageId);
+                        if (dbError) throw dbError;
 
-function hideNotification() {
-  document.getElementById('notification').classList.add('hidden');
-}
+                        // Step 2: remove from storage
+                        const filePath = extractStoragePath(imageUrl);
+                        if (filePath) {
+                            const { error: storageError } = await client.storage.from('project-images').remove([filePath]);
+                            if (storageError) console.error('Storage delete error:', storageError);
+                        }
 
-// Expose global functions
-window.deleteProject = deleteProject;
-window.editProject = editProject;
-window.removeImage = removeImage;
-window.hideNotification = hideNotification;
-window.saveImageLabel = saveImageLabel;
+                        ons.notification.toast('Image removed successfully.', { timeout: 2000, animation: 'fall' });
+                        loadProjects();
+                    } catch (error) {
+                        ons.notification.alert('Error removing image: ' + error.message);
+                    }
+                }
+            });
+    }
+
+    function extractStoragePath(url) {
+        try {
+            const parts = url.split('/storage/v1/object/public/project-images/');
+            return parts.length > 1 ? parts[1] : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function resetForm() {
+        const projectForm = document.getElementById('projectForm');
+        if(projectForm) projectForm.reset();
+        const imagePreview = document.getElementById('imagePreview');
+        if(imagePreview) imagePreview.innerHTML = '';
+        editMode = false;
+        editingProjectId = null;
+    }
+
+    function setLoadingState(isLoading, buttonId) {
+        const button = document.getElementById(buttonId);
+        if(button) {
+            const btnText = button.querySelector('.btn-text');
+            const btnLoading = button.querySelector('.btn-loading');
+            if (isLoading) {
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+                button.disabled = true;
+            } else {
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+    }
+});
