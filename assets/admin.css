@@ -512,6 +512,9 @@ body {
     justify-content: center;
     color: #000000 !important;
 }
+.image-label strong {
+    color: #000000 !important;
+}
 
 . image-label has-text-black {
     color: #000000 !important;
