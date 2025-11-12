@@ -38,6 +38,20 @@ body {
     color: var(--black-olive);
     font-weight: 600;
     transition: color 0.3s ease;
+    height: auto !important; /* Override Bulma's fixed height */
+    width: auto !important; /* Override Bulma's width */
+    min-height: unset !important; /* Remove Bulma's min-height */
+    padding: 0.5rem 1rem !important; /* Custom padding */
+    display: flex !important; /* Ensure flex display */
+    align-items: center !important; /* Center align items */
+    line-height: normal !important; /* Reset line height */
+}
+
+/* Specific override for logo navbar items */
+.navbar-item.logo {
+    height: auto !important;
+    width: auto !important;
+    padding: 0.5rem 0 !important; /* Adjust padding for logo */
 }
 
 .navbar-item:hover {
