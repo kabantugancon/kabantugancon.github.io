@@ -20,10 +20,16 @@ function initializeFloatingMenu() {
     
     if (floatingMenuBtn && floatingMenu && floatingMenuClose) {
         // Open menu
-        floatingMenuBtn.addEventListener('click', openFloatingMenu);
+        floatingMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent event bubbling
+            openFloatingMenu();
+        });
         
         // Close menu
-        floatingMenuClose.addEventListener('click', closeFloatingMenu);
+        floatingMenuClose.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent event bubbling
+            closeFloatingMenu();
+        });
         
         // Close menu when clicking backdrop
         floatingMenu.addEventListener('click', function(e) {
@@ -38,6 +44,13 @@ function initializeFloatingMenu() {
                 closeFloatingMenu();
             }
         });
+        
+        // Close menu when clicking on menu items
+        document.querySelectorAll('.floating-menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                closeFloatingMenu();
+            });
+        });
     }
 }
 
@@ -48,6 +61,7 @@ function openFloatingMenu() {
     if (floatingMenu) {
         floatingMenu.classList.add('is-active');
         body.classList.add('menu-open');
+        console.log('Floating menu opened'); // Debug log
     }
 }
 
@@ -58,22 +72,21 @@ function closeFloatingMenu() {
     if (floatingMenu) {
         floatingMenu.classList.remove('is-active');
         body.classList.remove('menu-open');
+        console.log('Floating menu closed'); // Debug log
     }
 }
-
-
 
 function initializeElements() {
     projectsGrid = document.getElementById('projectsGrid');
     filterButtons = document.querySelectorAll('.filter-button');
     
+    console.log('Initializing elements...'); // Debug log
+    
     // Initialize floating menu
     initializeFloatingMenu();
-    
-    // Remove old mobile menu initialization since we're replacing it
 }
 
-// Update the setupEventListeners function
+// Update the setupEventListeners function to include floating menu items
 function setupEventListeners() {
     // Filter buttons
     filterButtons.forEach(button => {
@@ -97,6 +110,21 @@ function setupEventListeners() {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Smooth scrolling for floating menu items
+    document.querySelectorAll('.floating-menu-item').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const href = this.getAttribute('href');
+            const target = document.querySelector(href);
             if (target) {
                 target.scrollIntoView({
                     behavior: 'smooth',
