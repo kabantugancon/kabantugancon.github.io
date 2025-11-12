@@ -3,142 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kabantugan Construction</title>
-    <!-- Foundation CSS -->
-    <!-- Compressed CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/foundation-sites@6.9.0/dist/css/foundation.min.css" crossorigin="anonymous">
+    <title>Kabantugan Construction Admin</title>
+    <!-- Onsen UI -->
+    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
+    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.css">
     <link rel="stylesheet" href="assets/admin.css">
 </head>
 <body>
-    <div class="admin-container">
-        <!-- Header with Logo -->
-        <header class="admin-header">
-            <div class="grid-container">
-                <div class="grid-x align-middle">
-                    <div class="cell small-12 medium-12">
-                        <div class="logo">
-                            <img src="assets/logo.jpg" alt="kabantugan Logo" class="logo-image">
-                        </div>
-                    </div>
-                    <div class="cell small-9 medium-10">
-                        <p class="header-subtitle">Manage Projects and Images</p>
-                    </div>
+    <ons-page>
+        <!-- Header -->
+        <ons-toolbar>
+            <div class="center">
+                <div class="toolbar-logo">
+                    <img src="assets/logo.jpg" alt="Kabantugan Construction" class="logo-image">
                 </div>
+                <div class="toolbar-subtitle">Project Management</div>
             </div>
-        </header>
+        </ons-toolbar>
 
-        <div class="grid-container admin-content">
-            <!-- Project Form -->
-            <section class="cell medium-6 form-section">
-                <h2 class="section-title">Add New Project</h2>
-                <form id="projectForm" class="project-form">
-                    <div class="grid-x grid-margin-x">
-                        <div class="cell">
-                            <label for="title">Project Title *
-                                <input type="text" id="title" name="title" required>
-                            </label>
-                        </div>
+        <!-- Tabbar Navigation -->
+        <ons-tabbar>
+            <ons-tab page="projects-tab" icon="ion-ios-folder" label="Projects" active></ons-tab>
+            <ons-tab page="create-tab" icon="ion-ios-add" label="Create"></ons-tab>
+        </ons-tabbar>
 
-                        <div class="cell">
-                            <label for="description">Description
-                                <textarea id="description" name="description" rows="4"></textarea>
-                            </label>
-                        </div>
-
-                        <div class="cell medium-6">
-                            <label for="category">Category *
-                                <select id="category" name="category" required>
-                                    <option value="">Select Category</option>
-                                    <option value="residential">Residential</option>
-                                    <option value="commercial">Commercial</option>
-                                    <option value="renovation">Renovation</option>
-                                    <option value="custom-homes">Custom Homes</option>
-                                    <option value="kitchen-bath">Kitchen & Bath</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <div class="cell medium-6">
-                            <label for="status">Status
-                                <select id="status" name="status">
-                                    <option value="completed">Completed</option>
-                                    <option value="in-progress">In Progress</option>
-                                    <option value="planned">Planned</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <div class="cell medium-6">
-                            <label for="clientName">Client Name
-                                <input type="text" id="clientName" name="client_name">
-                            </label>
-                        </div>
-
-                        <div class="cell medium-6">
-                            <label for="location">Location
-                                <input type="text" id="location" name="location">
-                            </label>
-                        </div>
-
-                        <div class="cell medium-6">
-                            <label for="startDate">Start Date
-                                <input type="date" id="startDate" name="start_date">
-                            </label>
-                        </div>
-
-                        <div class="cell medium-6">
-                            <label for="endDate">End Date
-                                <input type="date" id="endDate" name="end_date">
-                            </label>
-                        </div>
-
-                        <div class="cell">
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="featured" name="featured">
-                                <label for="featured">Featured Project</label>
-                            </div>
-                        </div>
-
-                        <!-- Image Upload Section -->
-                        <div class="cell">
-                            <label for="images">Project Images *
-                                <input type="file" id="images" name="images" multiple accept="image/*">
-                            </label>
-                            <div id="imagePreview" class="image-preview grid-x grid-margin-x small-up-2 medium-up-4"></div>
-                        </div>
-
-                        <div class="cell">
-                            <button type="submit" class="button expanded submit-btn" id="submitBtn">
-                                <span class="btn-text">Create Project</span>
-                                <span class="btn-loading" style="display: none;">
-                                    <span class="spinner"></span> Creating Project...
-                                </span>
-                            </button>
-                        </div>
+        <!-- Projects Tab -->
+        <ons-tabbar-item page="projects-tab">
+            <ons-page id="projects-tab">
+                <ons-list>
+                    <ons-list-header>Existing Projects</ons-list-header>
+                    <div id="projectsList">
+                        <!-- Projects will be loaded here -->
                     </div>
-                </form>
-            </section>
+                </ons-list>
+            </ons-page>
+        </ons-tabbar-item>
 
-            <!-- Existing Projects Section -->
-            <section class="cell medium-6 projects-section">
-                <h2 class="section-title">Existing Projects</h2>
-                <div id="projectsList" class="projects-list">
-                    <!-- Projects will be loaded here -->
+        <!-- Create/Edit Project Tab -->
+        <ons-tabbar-item page="create-tab">
+            <ons-page id="create-tab">
+                <ons-list>
+                    <ons-list-header id="form-header">Create New Project</ons-list-header>
+                    
+                    <form id="projectForm">
+                        <!-- Basic Information Section -->
+                        <ons-list-item>
+                            <div class="center">
+                                <h3>Basic Information</h3>
+                            </div>
+                        </ons-list-item>
+                        
+                        <ons-list-item>
+                            <div class="center">
+                                <ons-input id="title" placeholder="Project Title *" float required></ons-input>
+                            </div>
+                        </ons-list-item>
+
+                        <ons-list-item expandable>
+                            <div class="center">
+                                Project Details
+                            </div>
+                            <div class="expandable-content">
+                                <ons-input id="description" placeholder="Description" float></ons-input>
+                                
+                                <div class="form-row">
+                                    <ons-select id="category" class="select-full" required>
+                                        <option value="">Category *</option>
+                                        <option value="residential">Residential</option>
+                                        <option value="commercial">Commercial</option>
+                                        <option value="renovation">Renovation</option>
+                                        <option value="custom-homes">Custom Homes</option>
+                                        <option value="kitchen-bath">Kitchen & Bath</option>
+                                    </ons-select>
+                                </div>
+
+                                <div class="form-row">
+                                    <ons-select id="status" class="select-full">
+                                        <option value="completed">Completed</option>
+                                        <option value="in-progress">In Progress</option>
+                                        <option value="planned">Planned</option>
+                                    </ons-select>
+                                </div>
+                            </div>
+                        </ons-list-item>
+
+                        <!-- Client & Location Section -->
+                        <ons-list-item expandable>
+                            <div class="center">
+                                Client & Location
+                            </div>
+                            <div class="expandable-content">
+                                <ons-input id="clientName" placeholder="Client Name" float></ons-input>
+                                <ons-input id="location" placeholder="Location" float></ons-input>
+                                
+                                <div class="form-row">
+                                    <ons-input id="startDate" type="date" placeholder="Start Date" float></ons-input>
+                                    <ons-input id="endDate" type="date" placeholder="End Date" float></ons-input>
+                                </div>
+                            </div>
+                        </ons-list-item>
+
+                        <!-- Images Section -->
+                        <ons-list-item>
+                            <div class="center">
+                                <h3>Project Images *</h3>
+                                <p class="section-subtitle">15-25 images recommended</p>
+                            </div>
+                        </ons-list-item>
+
+                        <ons-list-item>
+                            <div class="center">
+                                <input type="file" id="images" name="images" multiple accept="image/*" style="display: none;">
+                                <ons-button id="imageUploadBtn" modifier="large" class="upload-btn">
+                                    <ons-icon icon="ion-ios-camera"></ons-icon>
+                                    Select Images
+                                </ons-button>
+                            </div>
+                        </ons-list-item>
+
+                        <!-- Image Preview Grid -->
+                        <ons-list-item>
+                            <div class="center">
+                                <div id="imagePreview" class="image-preview-grid"></div>
+                            </div>
+                        </ons-list-item>
+
+                        <!-- Featured Project Toggle -->
+                        <ons-list-item tappable>
+                            <label class="center">
+                                <ons-checkbox id="featured" input-id="checkbox-featured"></ons-checkbox>
+                                Featured Project
+                            </label>
+                        </ons-list-item>
+
+                        <!-- Submit Button -->
+                        <ons-list-item>
+                            <div class="center">
+                                <ons-button id="submitBtn" modifier="large" class="submit-btn" disabled>
+                                    <span class="btn-text">Create Project</span>
+                                    <span class="btn-loading" style="display: none;">
+                                        <ons-icon icon="ion-load-c" spin></ons-icon>
+                                        Processing...
+                                    </span>
+                                </ons-button>
+                            </div>
+                        </ons-list-item>
+                    </form>
+                </ons-list>
+            </ons-page>
+        </ons-tabbar-item>
+    </ons-page>
+
+    <!-- Image Label Modal -->
+    <ons-modal id="imageLabelModal">
+        <ons-page>
+            <ons-toolbar>
+                <div class="center">Edit Image Label</div>
+                <div class="right">
+                    <ons-toolbar-button onclick="hideLabelModal()">✕</ons-toolbar-button>
                 </div>
-            </section>
-        </div>
+            </ons-toolbar>
+            
+            <ons-list>
+                <ons-list-item>
+                    <div class="center">
+                        <img id="modalImagePreview" src="" class="modal-preview-image">
+                    </div>
+                </ons-list-item>
+                <ons-list-item>
+                    <div class="center">
+                        <ons-input id="modalImageLabel" placeholder="Label (e.g., Kitchen, Living Room)" float></ons-input>
+                    </div>
+                </ons-list-item>
+                <ons-list-item>
+                    <div class="center">
+                        <ons-button onclick="saveImageLabel()" modifier="large" class="save-label-btn">Save Label</ons-button>
+                    </div>
+                </ons-list-item>
+            </ons-list>
+        </ons-page>
+    </ons-modal>
 
-        <!-- Notification System -->
-        <div id="notification" class="notification hidden" data-closable>
-            <span id="notificationMessage"></span>
-            <button class="close-button" aria-label="Dismiss alert" type="button" data-close>
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Foundation JS -->
-    <script src="https://cdn.jsdelivr.net/npm/foundation-sites@6.9.0/dist/js/foundation.min.js" crossorigin="anonymous"></script>
+    <!-- Scripts -->
+    <script src="https://unpkg.com/onsenui/js/onsenui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <script src="assets/admin.js"></script>
