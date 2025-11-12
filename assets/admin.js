@@ -221,6 +221,7 @@ async function loadProjects() {
   }
 }
 
+// Update the displayProjects function in admin.js
 function displayProjects(projects) {
   const projectsList = document.getElementById('projectsList');
   
@@ -236,20 +237,37 @@ function displayProjects(projects) {
     return;
   }
 
-  projectsList.innerHTML = projects.map(project => `
-    <div class="project-card">
-      <div class="project-card-header">
+  projectsList.innerHTML = projects.map(project => {
+    const imageCount = project.project_images?.length || 0;
+    const hasImages = imageCount > 0;
+    
+    return `
+    <div class="project-card" id="project-${project.id}" data-project-id="${project.id}">
+      <div class="project-card-header" onclick="toggleProjectCollapse('${project.id}')">
         <div class="level is-mobile">
           <div class="level-left">
-            <h3 class="project-title title is-4">${project.title}</h3>
+            <div>
+              <h3 class="project-title title is-4">
+                ${project.title}
+                <span class="collapse-indicator">
+                  <i class="fas fa-chevron-down"></i>
+                </span>
+                ${hasImages ? `<span class="image-count">${imageCount} image${imageCount !== 1 ? 's' : ''}</span>` : ''}
+              </h3>
+              <div class="project-meta">
+                <span class="project-category">${project.category}</span>
+                <span class="project-status ${project.status}">${project.status}</span>
+                ${project.featured ? '<span class="tag is-primary"><i class="fas fa-star mr-1"></i> Featured</span>' : ''}
+              </div>
+            </div>
           </div>
           <div class="level-right">
             <div class="project-actions buttons are-small">
-              <button class="button is-warning" onclick="editProject('${project.id}')">
+              <button class="button is-warning" onclick="event.stopPropagation(); editProject('${project.id}')">
                 <span class="icon"><i class="fas fa-edit"></i></span>
                 <span>Edit</span>
               </button>
-              <button class="button is-danger" onclick="deleteProject('${project.id}')">
+              <button class="button is-danger" onclick="event.stopPropagation(); deleteProject('${project.id}')">
                 <span class="icon"><i class="fas fa-trash"></i></span>
                 <span>Delete</span>
               </button>
@@ -257,23 +275,38 @@ function displayProjects(projects) {
           </div>
         </div>
         
-        <div class="project-meta">
-          <span class="project-category">${project.category}</span>
-          <span class="project-status ${project.status}">${project.status}</span>
-          ${project.featured ? '<span class="tag is-primary"><i class="fas fa-star mr-1"></i> Featured</span>' : ''}
+        <!-- Quick actions shown only when collapsed -->
+        <div class="collapsed-actions buttons are-small">
+          <button class="button is-warning is-light" onclick="event.stopPropagation(); editProject('${project.id}')">
+            <span class="icon"><i class="fas fa-edit"></i></span>
+          </button>
+          <button class="button is-danger is-light" onclick="event.stopPropagation(); deleteProject('${project.id}')">
+            <span class="icon"><i class="fas fa-trash"></i></span>
+          </button>
+          ${hasImages ? `
+          <button class="button is-info is-light" onclick="event.stopPropagation(); toggleImagesCollapse('${project.id}')">
+            <span class="icon"><i class="fas fa-images"></i></span>
+            <span>Show Images</span>
+          </button>
+          ` : ''}
         </div>
-        
+      </div>
+
+      <div class="project-main-content">
         ${project.description ? `<p class="project-description">${project.description}</p>` : ''}
         
         ${project.client_name || project.location ? `
           <div class="project-details mt-2">
             ${project.client_name ? `<p><strong>Client:</strong> ${project.client_name}</p>` : ''}
             ${project.location ? `<p><strong>Location:</strong> ${project.location}</p>` : ''}
+            ${project.start_date ? `<p><strong>Started:</strong> ${new Date(project.start_date).toLocaleDateString()}</p>` : ''}
+            ${project.end_date ? `<p><strong>Completed:</strong> ${new Date(project.end_date).toLocaleDateString()}</p>` : ''}
           </div>
         ` : ''}
       </div>
-      
-      ${project.project_images?.length ? `
+
+      ${hasImages ? `
+      <div class="project-images-section">
         <div class="project-images-grid">
           ${project.project_images.map(img => `
             <div class="project-image-item">
@@ -297,9 +330,99 @@ function displayProjects(projects) {
             </div>
           `).join('')}
         </div>
-      ` : '<div class="p-4 has-text-centered has-text-grey">No images</div>'}
+      </div>
+      ` : ''}
+
+      <!-- Collapse Controls -->
+      <div class="collapse-controls">
+        ${hasImages ? `
+        <button class="collapse-btn images-btn" onclick="toggleImagesCollapse('${project.id}')">
+          <i class="fas fa-chevron-down"></i>
+          <span class="images-btn-text">Hide Images</span>
+        </button>
+        ` : ''}
+        <button class="collapse-btn" onclick="toggleProjectCollapse('${project.id}')">
+          <i class="fas fa-chevron-up"></i>
+          Collapse Project
+        </button>
+      </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
+
+  // Add keyboard accessibility
+  addKeyboardAccessibility();
+}
+
+// New Collapse Functions
+function toggleProjectCollapse(projectId) {
+    const projectCard = document.getElementById(`project-${projectId}`);
+    const collapseBtn = projectCard.querySelector('.collapse-btn:not(.images-btn)');
+    const collapseIndicator = projectCard.querySelector('.collapse-indicator i');
+    
+    projectCard.classList.toggle('collapsed');
+    
+    if (projectCard.classList.contains('collapsed')) {
+        collapseBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Expand Project';
+        collapseIndicator.className = 'fas fa-chevron-right';
+    } else {
+        collapseBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Collapse Project';
+        collapseIndicator.className = 'fas fa-chevron-down';
+    }
+}
+
+function toggleImagesCollapse(projectId) {
+    const projectCard = document.getElementById(`project-${projectId}`);
+    const imagesBtn = projectCard.querySelector('.images-btn');
+    const imagesBtnText = projectCard.querySelector('.images-btn-text');
+    
+    projectCard.classList.toggle('images-collapsed');
+    
+    if (projectCard.classList.contains('images-collapsed')) {
+        imagesBtnText.textContent = 'Show Images';
+        imagesBtn.querySelector('i').className = 'fas fa-chevron-right';
+    } else {
+        imagesBtnText.textContent = 'Hide Images';
+        imagesBtn.querySelector('i').className = 'fas fa-chevron-down';
+    }
+}
+
+// Keyboard accessibility for collapse functionality
+function addKeyboardAccessibility() {
+    document.querySelectorAll('.project-card-header').forEach(header => {
+        header.setAttribute('tabindex', '0');
+        header.setAttribute('role', 'button');
+        header.setAttribute('aria-expanded', 'true');
+        
+        header.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const projectId = header.closest('.project-card').dataset.projectId;
+                toggleProjectCollapse(projectId);
+            }
+        });
+    });
+}
+
+// Bulk collapse functions (optional - for power users)
+function collapseAllProjects() {
+    document.querySelectorAll('.project-card').forEach(card => {
+        if (!card.classList.contains('collapsed')) {
+            const projectId = card.dataset.projectId;
+            toggleProjectCollapse(projectId);
+        }
+    });
+    showNotification('All projects collapsed', 'success');
+}
+
+function expandAllProjects() {
+    document.querySelectorAll('.project-card').forEach(card => {
+        if (card.classList.contains('collapsed')) {
+            const projectId = card.dataset.projectId;
+            toggleProjectCollapse(projectId);
+        }
+    });
+    showNotification('All projects expanded', 'success');
 }
 
 // Edit existing project
@@ -489,3 +612,8 @@ window.openImageModal = openImageModal;
 window.closeImageModal = closeImageModal;
 window.saveImageLabelFromModal = saveImageLabelFromModal;
 window.removeImageFromModal = removeImageFromModal;
+
+window.toggleProjectCollapse = toggleProjectCollapse;
+window.toggleImagesCollapse = toggleImagesCollapse;
+window.collapseAllProjects = collapseAllProjects;
+window.expandAllProjects = expandAllProjects;
