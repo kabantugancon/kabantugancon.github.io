@@ -221,7 +221,7 @@ async function loadProjects() {
   }
 }
 
-// Update the displayProjects function in admin.js
+// Update the displayProjects function
 function displayProjects(projects) {
   const projectsList = document.getElementById('projectsList');
   
@@ -242,7 +242,7 @@ function displayProjects(projects) {
     const hasImages = imageCount > 0;
     
     return `
-    <div class="project-card" id="project-${project.id}" data-project-id="${project.id}">
+    <div class="project-card collapsed" id="project-${project.id}" data-project-id="${project.id}">
       <div class="project-card-header" onclick="toggleProjectCollapse('${project.id}')">
         <div class="level is-mobile">
           <div class="level-left">
@@ -250,7 +250,7 @@ function displayProjects(projects) {
               <h3 class="project-title title is-4">
                 ${project.title}
                 <span class="collapse-indicator">
-                  <i class="fas fa-chevron-down"></i>
+                  <i class="fas fa-chevron-right"></i>
                 </span>
                 ${hasImages ? `<span class="image-count">${imageCount} image${imageCount !== 1 ? 's' : ''}</span>` : ''}
               </h3>
@@ -337,24 +337,30 @@ function displayProjects(projects) {
       <div class="collapse-controls">
         ${hasImages ? `
         <button class="collapse-btn images-btn" onclick="toggleImagesCollapse('${project.id}')">
-          <i class="fas fa-chevron-down"></i>
-          <span class="images-btn-text">Hide Images</span>
+          <i class="fas fa-chevron-right"></i>
+          <span class="images-btn-text">Show Images</span>
         </button>
         ` : ''}
         <button class="collapse-btn" onclick="toggleProjectCollapse('${project.id}')">
-          <i class="fas fa-chevron-up"></i>
-          Collapse Project
+          <i class="fas fa-chevron-down"></i>
+          Expand Project
         </button>
       </div>
     </div>
     `;
   }).join('');
 
-  // Add keyboard accessibility
+  // Initialize all projects as images-collapsed by default
+  document.querySelectorAll('.project-card').forEach(card => {
+    if (card.querySelector('.project-images-section')) {
+      card.classList.add('images-collapsed');
+    }
+  });
+
   addKeyboardAccessibility();
 }
 
-// New Collapse Functions
+// Update the toggleProjectCollapse function to handle initial state correctly
 function toggleProjectCollapse(projectId) {
     const projectCard = document.getElementById(`project-${projectId}`);
     const collapseBtn = projectCard.querySelector('.collapse-btn:not(.images-btn)');
@@ -365,12 +371,17 @@ function toggleProjectCollapse(projectId) {
     if (projectCard.classList.contains('collapsed')) {
         collapseBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Expand Project';
         collapseIndicator.className = 'fas fa-chevron-right';
+        // Update ARIA attribute for accessibility
+        projectCard.querySelector('.project-card-header').setAttribute('aria-expanded', 'false');
     } else {
         collapseBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Collapse Project';
         collapseIndicator.className = 'fas fa-chevron-down';
+        // Update ARIA attribute for accessibility
+        projectCard.querySelector('.project-card-header').setAttribute('aria-expanded', 'true');
     }
 }
 
+// Update the toggleImagesCollapse function for initial state
 function toggleImagesCollapse(projectId) {
     const projectCard = document.getElementById(`project-${projectId}`);
     const imagesBtn = projectCard.querySelector('.images-btn');
@@ -387,12 +398,145 @@ function toggleImagesCollapse(projectId) {
     }
 }
 
-// Keyboard accessibility for collapse functionality
+// Update bulk functions for the new default state
+function collapseAllProjects() {
+    let collapsedCount = 0;
+    document.querySelectorAll('.project-card').forEach(card => {
+        if (!card.classList.contains('collapsed')) {
+            const projectId = card.dataset.projectId;
+            toggleProjectCollapse(projectId);
+            collapsedCount++;
+        }
+    });
+    if (collapsedCount > 0) {
+        showNotification(`Collapsed ${collapsedCount} project${collapsedCount !== 1 ? 's' : ''}`, 'success');
+    }
+}
+
+function expandAllProjects() {
+    let expandedCount = 0;
+    document.querySelectorAll('.project-card').forEach(card => {
+        if (card.classList.contains('collapsed')) {
+            const projectId = card.dataset.projectId;
+            toggleProjectCollapse(projectId);
+            expandedCount++;
+        }
+    });
+    if (expandedCount > 0) {
+        showNotification(`Expanded ${expandedCount} project${expandedCount !== 1 ? 's' : ''}`, 'success');
+    }
+}
+
+// Add a function to expand a specific project (useful after edits)
+function expandProject(projectId) {
+    const projectCard = document.getElementById(`project-${projectId}`);
+    if (projectCard && projectCard.classList.contains('collapsed')) {
+        toggleProjectCollapse(projectId);
+    }
+}
+
+// Update the editProject function to auto-expand the edited project
+async function editProject(projectId) {
+  editMode = true;
+  editingProjectId = projectId;
+
+  const { data: project, error } = await client.from('projects').select('*').eq('id', projectId).single();
+  if (error) return showNotification('Error loading project', 'error');
+
+  // Auto-expand the project being edited
+  expandProject(projectId);
+  
+  // Switch to form tab
+  switchTab('form');
+  
+  // Populate form
+  document.getElementById('title').value = project.title;
+  document.getElementById('description').value = project.description || '';
+  document.getElementById('category').value = project.category;
+  document.getElementById('status').value = project.status;
+  document.getElementById('clientName').value = project.client_name || '';
+  document.getElementById('location').value = project.location || '';
+  document.getElementById('startDate').value = project.start_date || '';
+  document.getElementById('endDate').value = project.end_date || '';
+  document.getElementById('featured').checked = project.featured;
+
+  document.getElementById('formTitle').textContent = 'Edit Project';
+  document.getElementById('submitText').textContent = 'Update Project';
+}
+
+// Update the form submission to auto-expand the created/updated project
+async function handleFormSubmit(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const images = document.getElementById('images').files;
+  const projectData = {
+    title: formData.get('title'),
+    description: formData.get('description'),
+    category: formData.get('category'),
+    status: formData.get('status'),
+    client_name: formData.get('client_name'),
+    location: formData.get('location'),
+    start_date: formData.get('start_date') || null,
+    end_date: formData.get('end_date') || null,
+    featured: formData.get('featured') === 'on'
+  };
+
+  if (!editMode && images.length === 0) {
+    showNotification('Please select at least one image for new projects.', 'error');
+    return;
+  }
+
+  setLoadingState(true);
+
+  try {
+    let projectId;
+    
+    if (!editMode) {
+      // CREATE
+      const { data, error } = await client.from('projects').insert([projectData]).select().single();
+      if (error) throw error;
+      projectId = data.id;
+      if (images.length > 0) await uploadProjectImages(projectId, images);
+      showNotification('Project created successfully!', 'success');
+    } else {
+      // UPDATE
+      projectId = editingProjectId;
+      const { error } = await client.from('projects').update(projectData).eq('id', editingProjectId);
+      if (error) throw error;
+      if (images.length > 0) await uploadProjectImages(editingProjectId, images);
+      showNotification('Project updated successfully!', 'success');
+    }
+
+    resetForm();
+    await loadProjects();
+    
+    // Auto-expand the newly created or updated project
+    setTimeout(() => {
+      expandProject(projectId);
+      // Scroll to the project
+      const projectElement = document.getElementById(`project-${projectId}`);
+      if (projectElement) {
+        projectElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 100);
+    
+    switchTab('projects');
+  } catch (error) {
+    console.error(error);
+    showNotification('Error saving project: ' + error.message, 'error');
+  } finally {
+    setLoadingState(false);
+  }
+}
+
+// Update the addKeyboardAccessibility function for initial collapsed state
 function addKeyboardAccessibility() {
     document.querySelectorAll('.project-card-header').forEach(header => {
         header.setAttribute('tabindex', '0');
         header.setAttribute('role', 'button');
-        header.setAttribute('aria-expanded', 'true');
+        // Set initial ARIA state based on collapsed class
+        const isCollapsed = header.closest('.project-card').classList.contains('collapsed');
+        header.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
         
         header.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -617,3 +761,4 @@ window.toggleProjectCollapse = toggleProjectCollapse;
 window.toggleImagesCollapse = toggleImagesCollapse;
 window.collapseAllProjects = collapseAllProjects;
 window.expandAllProjects = expandAllProjects;
+window.expandProject = expandProject;
