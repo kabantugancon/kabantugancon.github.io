@@ -16,25 +16,71 @@
     <!-- Navigation -->
     <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
         <div class="container">
-            <div class="navbar-brand">
-                <a class="navbar-item logo" href="#home">
+            <!-- Mobile Logo Header -->
+            <div class="navbar-brand is-hidden-tablet">
+                <a class="navbar-item logo mobile-logo" href="#home">
                     <img src="assets/logo.jpg" alt="Kabantugan Construction">
                 </a>
-
-                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
-                    <span aria-hidden="true"></span>
-                    <span aria-hidden="true"></span>
-                    <span aria-hidden="true"></span>
-                </a>
             </div>
-
-            <div id="navbarMenu" class="navbar-menu">
+    
+            <!-- Desktop Navigation -->
+            <div class="navbar-menu is-hidden-touch">
+                <div class="navbar-start">
+                    <a class="navbar-item logo" href="#home">
+                        <img src="assets/logo.jpg" alt="Kabantugan Construction">
+                    </a>
+                </div>
                 <div class="navbar-end">
                     <a class="navbar-item" href="#home">Home</a>
                     <a class="navbar-item" href="#about">About</a>
                     <a class="navbar-item" href="#projects">Projects</a>
                     <a class="navbar-item" href="#services">Services</a>
                     <a class="navbar-item" href="#contact">Contact</a>
+                </div>
+            </div>
+    
+            <!-- Mobile Menu Floating Button -->
+            <div class="mobile-menu-trigger is-hidden-tablet">
+                <button class="button is-amber floating-menu-btn" id="floatingMenuBtn">
+                    <span class="icon">
+                        <i class="fas fa-bars"></i>
+                    </span>
+                </button>
+            </div>
+    
+            <!-- Floating Mobile Menu -->
+            <div class="floating-menu is-hidden" id="floatingMenu">
+                <div class="floating-menu-content">
+                    <div class="floating-menu-header">
+                        <h3>Menu</h3>
+                        <button class="button is-text floating-menu-close" id="floatingMenuClose">
+                            <span class="icon">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="floating-menu-items">
+                        <a class="floating-menu-item" href="#home" onclick="closeFloatingMenu()">
+                            <span class="icon"><i class="fas fa-home"></i></span>
+                            <span>Home</span>
+                        </a>
+                        <a class="floating-menu-item" href="#about" onclick="closeFloatingMenu()">
+                            <span class="icon"><i class="fas fa-info-circle"></i></span>
+                            <span>About</span>
+                        </a>
+                        <a class="floating-menu-item" href="#projects" onclick="closeFloatingMenu()">
+                            <span class="icon"><i class="fas fa-project-diagram"></i></span>
+                            <span>Projects</span>
+                        </a>
+                        <a class="floating-menu-item" href="#services" onclick="closeFloatingMenu()">
+                            <span class="icon"><i class="fas fa-tools"></i></span>
+                            <span>Services</span>
+                        </a>
+                        <a class="floating-menu-item" href="#contact" onclick="closeFloatingMenu()">
+                            <span class="icon"><i class="fas fa-envelope"></i></span>
+                            <span>Contact</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
