@@ -15,8 +15,8 @@
     padding: 0;
     box-sizing: border-box;
 }
-container {
-     background: var(--amber);
+.container {
+     background: var(--amber) !important;
 }
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
