@@ -321,21 +321,25 @@ body {
     transform: rotate(-90deg);
 }
 
-/* Collapse States */
+/* Ensure collapsed state is properly styled on initial load */
 .project-card.collapsed .project-main-content,
 .project-card.collapsed .project-images-section,
 .project-card.collapsed .collapse-controls {
-    display: none;
+    display: none !important;
 }
 
 .project-card.images-collapsed .project-images-section {
-    display: none;
+    display: none !important;
 }
 
-.project-card.images-collapsed .collapse-btn.images-btn i {
-    transform: rotate(-90deg);
+/* Make sure the collapsed actions are visible by default in collapsed state */
+.project-card.collapsed .collapsed-actions {
+    display: flex !important;
 }
 
+.project-card.collapsed .project-actions {
+    display: none !important;
+}
 /* Collapse indicators in header */
 .collapse-indicator {
     margin-left: 0.5rem;
