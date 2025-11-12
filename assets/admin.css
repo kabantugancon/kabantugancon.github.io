@@ -513,6 +513,10 @@ body {
     color: #000000 !important;
 }
 
+. image-label has-text-black {
+    color: #000000 !important;
+}
+
 .image-actions {
     display: flex;
     gap: 0.5rem;
