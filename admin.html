@@ -9,10 +9,29 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/admin.css">
+    <style>
+        /* Force light mode and prevent dark mode */
+        body {
+            background-color: #f8f8f8 !important;
+            color: #414240 !important;
+        }
+        
+        /* Ensure all components are light */
+        .card, .navbar, .modal, .box, .notification {
+            background-color: white !important;
+            color: #414240 !important;
+        }
+        
+        .input, .textarea, .select select {
+            background-color: white !important;
+            color: #414240 !important;
+            border-color: #dbdbdb !important;
+        }
+    </style>
 </head>
-<body>
+<body class="has-background-light">
     <!-- Mobile Navigation -->
-    <nav class="navbar is-fixed-top is-hidden-tablet mobile-nav" role="navigation" aria-label="main navigation">
+    <nav class="navbar is-fixed-top is-hidden-tablet mobile-nav has-background-white" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <a class="navbar-item logo-mobile" href="#">
                 <img src="assets/logo.jpg" alt="Kabantugan Construction">
@@ -25,7 +44,7 @@
             </a>
         </div>
 
-        <div id="mobileMenu" class="navbar-menu">
+        <div id="mobileMenu" class="navbar-menu has-background-white">
             <div class="navbar-start">
                 <a class="navbar-item is-active" data-tab="projects">
                     <span class="icon"><i class="fas fa-list"></i></span>
@@ -41,7 +60,7 @@
 
     <div class="admin-layout">
         <!-- Desktop Sidebar -->
-        <aside class="sidebar is-hidden-touch">
+        <aside class="sidebar is-hidden-touch has-background-white">
             <div class="sidebar-header">
                 <div class="logo">
                     <img src="assets/logo.jpg" alt="Kabantugan Construction">
@@ -62,14 +81,14 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content has-background-light">
             <!-- Projects Tab -->
             <div class="tab-content is-active" id="projectsTab">
                 <section class="section">
                     <div class="container">
                         <div class="level">
                             <div class="level-left">
-                                <h1 class="title is-2">Projects</h1>
+                                <h1 class="title is-2 has-text-dark">Projects</h1>
                             </div>
                             <div class="level-right">
                                 <button class="button is-amber is-hidden-tablet" data-tab="form">
@@ -91,41 +110,41 @@
                 <section class="section">
                     <div class="container">
                         <div class="form-header">
-                            <h1 class="title is-2" id="formTitle">Create New Project</h1>
-                            <p class="subtitle">Add project details and upload images</p>
+                            <h1 class="title is-2 has-text-dark" id="formTitle">Create New Project</h1>
+                            <p class="subtitle has-text-grey-dark">Add project details and upload images</p>
                         </div>
 
                         <form id="projectForm" class="project-form">
                             <!-- Basic Information Card -->
-                            <div class="card form-card">
-                                <header class="card-header">
-                                    <p class="card-header-title">
+                            <div class="card form-card has-background-white">
+                                <header class="card-header has-background-white">
+                                    <p class="card-header-title has-text-dark">
                                         <span class="icon"><i class="fas fa-info-circle"></i></span>
                                         Basic Information
                                     </p>
                                 </header>
-                                <div class="card-content">
+                                <div class="card-content has-background-white">
                                     <div class="field">
-                                        <label class="label">Project Title *</label>
+                                        <label class="label has-text-dark">Project Title *</label>
                                         <div class="control">
-                                            <input class="input" type="text" id="title" name="title" required>
+                                            <input class="input has-background-white" type="text" id="title" name="title" required>
                                         </div>
                                     </div>
 
                                     <div class="field">
-                                        <label class="label">Description</label>
+                                        <label class="label has-text-dark">Description</label>
                                         <div class="control">
-                                            <textarea class="textarea" id="description" name="description" rows="3"></textarea>
+                                            <textarea class="textarea has-background-white" id="description" name="description" rows="3"></textarea>
                                         </div>
                                     </div>
 
                                     <div class="columns is-multiline">
                                         <div class="column is-half">
                                             <div class="field">
-                                                <label class="label">Category *</label>
+                                                <label class="label has-text-dark">Category *</label>
                                                 <div class="control">
                                                     <div class="select is-fullwidth">
-                                                        <select id="category" name="category" required>
+                                                        <select id="category" name="category" required class="has-background-white">
                                                             <option value="">Select Category</option>
                                                             <option value="residential">Residential</option>
                                                             <option value="commercial">Commercial</option>
@@ -139,10 +158,10 @@
                                         </div>
                                         <div class="column is-half">
                                             <div class="field">
-                                                <label class="label">Status</label>
+                                                <label class="label has-text-dark">Status</label>
                                                 <div class="control">
                                                     <div class="select is-fullwidth">
-                                                        <select id="status" name="status">
+                                                        <select id="status" name="status" class="has-background-white">
                                                             <option value="completed">Completed</option>
                                                             <option value="in-progress">In Progress</option>
                                                             <option value="planned">Planned</option>
@@ -156,44 +175,44 @@
                             </div>
 
                             <!-- Client & Location Card -->
-                            <div class="card form-card">
-                                <header class="card-header">
-                                    <p class="card-header-title">
+                            <div class="card form-card has-background-white">
+                                <header class="card-header has-background-white">
+                                    <p class="card-header-title has-text-dark">
                                         <span class="icon"><i class="fas fa-map-marker-alt"></i></span>
                                         Client & Location
                                     </p>
                                 </header>
-                                <div class="card-content">
+                                <div class="card-content has-background-white">
                                     <div class="columns is-multiline">
                                         <div class="column is-half">
                                             <div class="field">
-                                                <label class="label">Client Name</label>
+                                                <label class="label has-text-dark">Client Name</label>
                                                 <div class="control">
-                                                    <input class="input" type="text" id="clientName" name="client_name">
+                                                    <input class="input has-background-white" type="text" id="clientName" name="client_name">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="column is-half">
                                             <div class="field">
-                                                <label class="label">Location</label>
+                                                <label class="label has-text-dark">Location</label>
                                                 <div class="control">
-                                                    <input class="input" type="text" id="location" name="location">
+                                                    <input class="input has-background-white" type="text" id="location" name="location">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="column is-half">
                                             <div class="field">
-                                                <label class="label">Start Date</label>
+                                                <label class="label has-text-dark">Start Date</label>
                                                 <div class="control">
-                                                    <input class="input" type="date" id="startDate" name="start_date">
+                                                    <input class="input has-background-white" type="date" id="startDate" name="start_date">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="column is-half">
                                             <div class="field">
-                                                <label class="label">End Date</label>
+                                                <label class="label has-text-dark">End Date</label>
                                                 <div class="control">
-                                                    <input class="input" type="date" id="endDate" name="end_date">
+                                                    <input class="input has-background-white" type="date" id="endDate" name="end_date">
                                                 </div>
                                             </div>
                                         </div>
@@ -202,33 +221,33 @@
                             </div>
 
                             <!-- Images Card -->
-                            <div class="card form-card">
-                                <header class="card-header">
-                                    <p class="card-header-title">
+                            <div class="card form-card has-background-white">
+                                <header class="card-header has-background-white">
+                                    <p class="card-header-title has-text-dark">
                                         <span class="icon"><i class="fas fa-images"></i></span>
                                         Project Images
                                     </p>
                                 </header>
-                                <div class="card-content">
+                                <div class="card-content has-background-white">
                                     <div class="field">
-                                        <label class="label">Upload Images *</label>
+                                        <label class="label has-text-dark">Upload Images *</label>
                                         <div class="file has-name is-fullwidth">
                                             <label class="file-label">
                                                 <input class="file-input" type="file" id="images" name="images" multiple accept="image/*">
-                                                <span class="file-cta">
+                                                <span class="file-cta has-background-white">
                                                     <span class="file-icon">
                                                         <i class="fas fa-upload"></i>
                                                     </span>
-                                                    <span class="file-label">
+                                                    <span class="file-label has-text-dark">
                                                         Choose images…
                                                     </span>
                                                 </span>
-                                                <span class="file-name" id="fileName">
+                                                <span class="file-name has-text-dark" id="fileName">
                                                     No files selected
                                                 </span>
                                             </label>
                                         </div>
-                                        <p class="help">Select multiple images. First image will be set as primary.</p>
+                                        <p class="help has-text-grey">Select multiple images. First image will be set as primary.</p>
                                     </div>
 
                                     <div id="imagePreview" class="image-preview-grid mt-4">
@@ -246,7 +265,7 @@
                                             <span class="icon has-text-amber">
                                                 <i class="fas fa-star"></i>
                                             </span>
-                                            <span>Mark as Featured Project</span>
+                                            <span class="has-text-dark">Mark as Featured Project</span>
                                         </span>
                                     </label>
                                 </div>
@@ -257,7 +276,7 @@
                                 <div class="control">
                                     <button type="submit" class="button is-amber is-fullwidth is-large" id="submitBtn">
                                         <span class="icon"><i class="fas fa-plus"></i></span>
-                                        <span id="submitText">Create Project</span>
+                                        <span id="submitText" class="has-text-dark">Create Project</span>
                                     </button>
                                 </div>
                             </div>
@@ -269,26 +288,26 @@
     </div>
 
     <!-- Notification System -->
-    <div id="notification" class="notification is-hidden">
+    <div id="notification" class="notification is-hidden has-background-white">
         <button class="delete" onclick="hideNotification()"></button>
-        <span id="notificationMessage"></span>
+        <span id="notificationMessage" class="has-text-dark"></span>
     </div>
 
     <!-- Image Management Modal -->
     <div class="modal" id="imageModal">
         <div class="modal-background" onclick="closeImageModal()"></div>
         <div class="modal-content">
-            <div class="box">
-                <h3 class="title is-4">Manage Image</h3>
+            <div class="box has-background-white">
+                <h3 class="title is-4 has-text-dark">Manage Image</h3>
                 <div id="modalImageContainer"></div>
                 <div class="field mt-4">
-                    <label class="label">Image Label</label>
+                    <label class="label has-text-dark">Image Label</label>
                     <div class="control">
-                        <input class="input" type="text" id="modalImageLabel" placeholder="e.g., Kitchen, Living Room">
+                        <input class="input has-background-white" type="text" id="modalImageLabel" placeholder="e.g., Kitchen, Living Room">
                     </div>
                 </div>
                 <div class="buttons is-right">
-                    <button class="button" onclick="closeImageModal()">Cancel</button>
+                    <button class="button has-background-white has-text-dark" onclick="closeImageModal()">Cancel</button>
                     <button class="button is-success" onclick="saveImageLabelFromModal()">Save Label</button>
                     <button class="button is-danger" onclick="removeImageFromModal()">Remove Image</button>
                 </div>
