@@ -602,11 +602,11 @@ body.menu-open .whatsapp-float {
     
     .navbar-brand.is-hidden-tablet {
         padding: 0;
-        min-height: 100px;
+        min-height: 40px;
     }
     
     .mobile-logo img {
-        max-height: 80px;
+        max-height: 100%;
     }
     
     .hero {
