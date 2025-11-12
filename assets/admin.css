@@ -510,7 +510,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--black-olive) !important;
+    color: #000000 !important;
 }
 
 .image-actions {
