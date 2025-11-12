@@ -3,11 +3,10 @@ const supabaseUrl = 'https://zjalerwvsykfeyvoxpmg.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqYWxlcnd2c3lrZmV5dm94cG1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MjQ1ODgsImV4cCI6MjA3ODQwMDU4OH0.D3mYWx8fo8XskZ65Pc7mQCkRy042TZ7u4KjiqY6faWY';
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Global variables
+// DOM Elements
+let projectForm, imagesInput, imagePreview, projectsList, submitBtn, btnText, btnLoading;
 let editMode = false;
 let editingProjectId = null;
-let currentEditingImageId = null;
-let selectedImages = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeElements();
@@ -16,140 +15,79 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeElements() {
-  // Elements will be accessed via IDs
+  projectForm = document.getElementById('projectForm');
+  imagesInput = document.getElementById('images');
+  imagePreview = document.getElementById('imagePreview');
+  projectsList = document.getElementById('projectsList');
+  submitBtn = document.getElementById('submitBtn');
+  btnText = submitBtn.querySelector('.btn-text');
+  btnLoading = submitBtn.querySelector('.btn-loading');
 }
 
 function setupEventListeners() {
-  // Image upload button
-  document.getElementById('imageUploadBtn').addEventListener('click', () => {
-    document.getElementById('images').click();
-  });
-  
-  // File input change
-  document.getElementById('images').addEventListener('change', handleImageSelection);
-  
-  // Form submission
-  document.getElementById('projectForm').addEventListener('submit', handleFormSubmit);
-  
-  // Real-time validation
-  document.getElementById('title').addEventListener('input', validateForm);
+  imagesInput.addEventListener('change', handleImagePreview);
+  projectForm.addEventListener('submit', handleFormSubmit);
 }
 
-async function handleImageSelection(event) {
-  const files = Array.from(event.target.files);
-  selectedImages = [...selectedImages, ...files];
-  updateImagePreview();
-  validateForm();
-}
-
-function updateImagePreview() {
-  const previewGrid = document.getElementById('imagePreview');
-  previewGrid.innerHTML = '';
-
-  selectedImages.forEach((file, index) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const card = document.createElement('div');
-      card.className = 'preview-card';
-      card.innerHTML = `
-        <img src="${e.target.result}" class="preview-image" alt="Preview ${index + 1}">
-        <div class="preview-actions">
-          <ons-button class="label-btn" modifier="quiet" onclick="openLabelModal(${index})">
-            <ons-icon icon="ion-ios-pricetag"></ons-icon>
-          </ons-button>
-          <ons-button class="remove-btn" modifier="quiet" onclick="removeSelectedImage(${index})">
-            <ons-icon icon="ion-ios-trash"></ons-icon>
-          </ons-button>
-        </div>
-        <div class="image-label ${file.label ? '' : 'empty'}">
-          ${file.label || 'No label'}
-        </div>
-      `;
-      previewGrid.appendChild(card);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function removeSelectedImage(index) {
-  selectedImages.splice(index, 1);
-  updateImagePreview();
-  validateForm();
-}
-
-function openLabelModal(imageIndex) {
-  const file = selectedImages[imageIndex];
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('modalImagePreview').src = e.target.result;
-    document.getElementById('modalImageLabel').value = file.label || '';
-    currentEditingImageId = imageIndex;
-    document.getElementById('imageLabelModal').setAttribute('visible', 'true');
-  };
-  reader.readAsDataURL(file);
-}
-
-function hideLabelModal() {
-  document.getElementById('imageLabelModal').removeAttribute('visible');
-}
-
-function saveImageLabel() {
-  const label = document.getElementById('modalImageLabel').value.trim();
-  if (currentEditingImageId !== null) {
-    selectedImages[currentEditingImageId].label = label;
-    updateImagePreview();
-    hideLabelModal();
-    showNotification('Label saved successfully!', 'success');
+function handleImagePreview(event) {
+  imagePreview.innerHTML = '';
+  const files = event.target.files;
+  for (let file of files) {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'preview-image cell';
+        imagePreview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
   }
 }
 
-function validateForm() {
-  const title = document.getElementById('title').value.trim();
-  const category = document.getElementById('category').value;
-  const hasImages = selectedImages.length > 0;
-  const isValid = title && category && (hasImages || editMode);
-  
-  document.getElementById('submitBtn').disabled = !isValid;
-}
-
+// CREATE or UPDATE project
 async function handleFormSubmit(event) {
   event.preventDefault();
-  
-  const formData = {
-    title: document.getElementById('title').value.trim(),
-    description: document.getElementById('description').value.trim(),
-    category: document.getElementById('category').value,
-    status: document.getElementById('status').value,
-    client_name: document.getElementById('clientName').value.trim(),
-    location: document.getElementById('location').value.trim(),
-    start_date: document.getElementById('startDate').value || null,
-    end_date: document.getElementById('endDate').value || null,
-    featured: document.getElementById('featured').checked
+  const formData = new FormData(event.target);
+  const images = imagesInput.files;
+  const projectData = {
+    title: formData.get('title'),
+    description: formData.get('description'),
+    category: formData.get('category'),
+    status: formData.get('status'),
+    client_name: formData.get('client_name'),
+    location: formData.get('location'),
+    start_date: formData.get('start_date') || null,
+    end_date: formData.get('end_date') || null,
+    featured: formData.get('featured') === 'on'
   };
+
+  // Remove image requirement if editing
+  if (!editMode && images.length === 0) {
+    showNotification('Please select at least one image for new projects.', 'error');
+    return;
+  }
 
   setLoadingState(true);
 
   try {
     if (!editMode) {
       // CREATE
-      const { data, error } = await client.from('projects').insert([formData]).select().single();
+      const { data, error } = await client.from('projects').insert([projectData]).select().single();
       if (error) throw error;
-      await uploadProjectImages(data.id, selectedImages);
+      if (images.length > 0) await uploadProjectImages(data.id, images);
       showNotification('Project created successfully!', 'success');
     } else {
-      // UPDATE
-      const { error } = await client.from('projects').update(formData).eq('id', editingProjectId);
+      // UPDATE — no need to upload images unless provided
+      const { error } = await client.from('projects').update(projectData).eq('id', editingProjectId);
       if (error) throw error;
-      if (selectedImages.length > 0) {
-        await uploadProjectImages(editingProjectId, selectedImages);
-      }
+      if (images.length > 0) await uploadProjectImages(editingProjectId, images);
       showNotification('Project updated successfully!', 'success');
     }
 
     resetForm();
     loadProjects();
-    // Switch to projects tab
-    document.querySelector('ons-tabbar').setActiveTab(0);
   } catch (error) {
     console.error(error);
     showNotification('Error saving project: ' + error.message, 'error');
@@ -158,34 +96,45 @@ async function handleFormSubmit(event) {
   }
 }
 
+// Upload project images to Supabase Storage (with 70% compression)
 async function uploadProjectImages(projectId, images) {
   const compressionOptions = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1920,
-    useWebWorker: true,
-    initialQuality: 0.7
+    maxSizeMB: 1,              // Limit to ~1MB
+    maxWidthOrHeight: 1920,    // Resize large images
+    useWebWorker: true,        // Run compression in a web worker
+    initialQuality: 0.7        // ✅ Compress to ~70% of original quality
   };
 
   for (let i = 0; i < images.length; i++) {
     try {
       const imageFile = images[i];
+
+      // 🔹 Compress before upload
       const compressedFile = await imageCompression(imageFile, compressionOptions);
-      
+      console.log(
+        `Compressed ${imageFile.name}:`,
+        `${(imageFile.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`
+      );
+
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${projectId}/${Date.now()}-${i}.${fileExt}`;
 
+      // 🔹 Upload compressed image
       const { error: uploadError } = await client.storage
         .from('project-images')
         .upload(fileName, compressedFile);
 
-      if (uploadError) continue;
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        continue;
+      }
 
+      // 🔹 Save image record in DB
       const { data: { publicUrl } } = client.storage.from('project-images').getPublicUrl(fileName);
       const { error: dbError } = await client.from('project_images').insert({
         project_id: projectId,
         image_url: publicUrl,
         image_name: imageFile.name,
-        label: imageFile.label || null,
         is_primary: i === 0,
         display_order: i
       });
@@ -198,10 +147,10 @@ async function uploadProjectImages(projectId, images) {
   }
 }
 
+
+// Load and display projects
 async function loadProjects() {
-  const projectsList = document.getElementById('projectsList');
   projectsList.innerHTML = '<div class="loading">Loading projects...</div>';
-  
   try {
     const { data: projects, error } = await client.from('projects').select(`
       *,
@@ -221,60 +170,57 @@ async function loadProjects() {
 }
 
 function displayProjects(projects) {
-  const projectsList = document.getElementById('projectsList');
-  
   if (!projects || projects.length === 0) {
     projectsList.innerHTML = '<div class="no-projects">No projects yet</div>';
     return;
   }
 
   projectsList.innerHTML = projects.map(project => `
-    <ons-list-item tappable class="project-card">
+    <div class="project-item">
       <div class="project-header">
-        <h3 class="project-title">${project.title}</h3>
-        <div class="project-meta">
-          <span class="project-category">${project.category}</span>
-          <span class="project-status ${project.status}">${project.status}</span>
-          ${project.featured ? '<span style="color: var(--amber);">⭐</span>' : ''}
+        <h3>${project.title}</h3>
+        <div class="project-actions">
+          <button class="button warning small" onclick="editProject('${project.id}')">✏️ Edit</button>
+          <button class="button alert small" onclick="deleteProject('${project.id}')">🗑️ Delete</button>
         </div>
       </div>
-      
-      ${project.description ? `
-        <div class="project-description">
-          ${project.description}
-        </div>
-      ` : ''}
-      
+      <div class="project-meta">
+        <span class="project-category">${project.category}</span>
+        <span class="project-status ${project.status}">${project.status}</span>
+        ${project.featured ? '<span class="badge primary">⭐ Featured</span>' : ''}
+      </div>
+      <p>${project.description || ''}</p>
       ${project.project_images?.length ? `
-        <div class="project-images-grid">
-          ${project.project_images.slice(0, 6).map(img => `
-            <div class="project-image-item">
-              <img src="${img.image_url}" class="project-image" alt="${img.label || 'Project image'}">
-              ${img.label ? `<div class="project-image-label">${img.label}</div>` : ''}
+      <div class="project-images">
+        ${project.project_images.map(img => `
+          <div class="project-image-wrapper">
+            <img src="${img.image_url}" class="project-image">
+    
+            ${img.label 
+              ? `<p class="image-label-display"><strong>Label:</strong> ${img.label}</p>` 
+              : `<p class="image-label-display muted">(No label yet)</p>`}
+    
+            <input 
+              type="text" 
+              id="label-${img.id}" 
+              value="${img.label || ''}" 
+              placeholder="Edit or add label (e.g. Kitchen, Living Room)" 
+              class="image-label-input" 
+            />
+    
+            <div class="image-actions">
+              <button class="button success tiny" onclick="saveImageLabel('${img.id}')">💾 Save Label</button>
+              <button class="button alert tiny" onclick="removeImage('${img.id}', '${img.image_url}')">🗑️ Remove</button>
             </div>
-          `).join('')}
-          ${project.project_images.length > 6 ? `
-            <div class="project-image-item" style="background: var(--vanilla); display: flex; align-items: center; justify-content: center; color: var(--black-olive); font-weight: bold;">
-              +${project.project_images.length - 6}
-            </div>
-          ` : ''}
-        </div>
-      ` : '<div style="padding: 1rem; color: #999; text-align: center;">No images</div>'}
-      
-      <div class="project-actions">
-        <ons-button modifier="outline" class="edit-btn" onclick="editProject('${project.id}')">
-          <ons-icon icon="ion-ios-create"></ons-icon>
-          Edit
-        </ons-button>
-        <ons-button modifier="outline" class="delete-btn" onclick="deleteProject('${project.id}')">
-          <ons-icon icon="ion-ios-trash"></ons-icon>
-          Delete
-        </ons-button>
+          </div>
+        `).join('')}
       </div>
-    </ons-list-item>
+    ` : '<p>No images</p>'}
+    </div>
   `).join('');
 }
 
+// Edit existing project
 async function editProject(projectId) {
   editMode = true;
   editingProjectId = projectId;
@@ -282,13 +228,7 @@ async function editProject(projectId) {
   const { data: project, error } = await client.from('projects').select('*').eq('id', projectId).single();
   if (error) return showNotification('Error loading project', 'error');
 
-  // Switch to create tab
-  document.querySelector('ons-tabbar').setActiveTab(1);
-  
-  // Update form header
-  document.getElementById('form-header').textContent = 'Edit Project';
-  
-  // Fill form
+  projectForm.scrollIntoView({ behavior: 'smooth' });
   document.getElementById('title').value = project.title;
   document.getElementById('description').value = project.description || '';
   document.getElementById('category').value = project.category;
@@ -299,88 +239,33 @@ async function editProject(projectId) {
   document.getElementById('endDate').value = project.end_date || '';
   document.getElementById('featured').checked = project.featured;
 
-  document.querySelector('.btn-text').textContent = 'Update Project';
-  selectedImages = [];
-  updateImagePreview();
-  validateForm();
+  btnText.textContent = 'Update Project';
 }
 
-async function deleteProject(projectId) {
-  const answer = await ons.notification.confirm('Delete this project and all its images?');
-  if (!answer) return;
-
-  setLoadingState(true);
+// Remove image from both DB and Supabase storage
+async function removeImage(imageId, imageUrl) {
+  if (!confirm('Remove this image permanently?')) return;
 
   try {
-    // Get project images
-    const { data: images, error: imagesError } = await client
-      .from('project_images')
-      .select('id, image_url')
-      .eq('project_id', projectId);
-    
-    if (imagesError) throw imagesError;
+    // Step 1: delete DB record
+    const { error: dbError } = await client.from('project_images').delete().eq('id', imageId);
+    if (dbError) throw dbError;
 
-    // Delete from storage
-    if (images && images.length > 0) {
-      for (let image of images) {
-        const filePath = extractStoragePath(image.image_url);
-        if (filePath) {
-          await client.storage.from('project-images').remove([filePath]);
-        }
-      }
+    // Step 2: remove from storage
+    const filePath = extractStoragePath(imageUrl);
+    if (filePath) {
+      const { error: storageError } = await client.storage.from('project-images').remove([filePath]);
+      if (storageError) console.error('Storage delete error:', storageError);
     }
 
-    // Delete project
-    const { error: projectError } = await client
-      .from('projects')
-      .delete()
-      .eq('id', projectId);
-    
-    if (projectError) throw projectError;
-
-    showNotification('Project deleted successfully', 'success');
+    showNotification('Image removed successfully.', 'success');
     loadProjects();
   } catch (error) {
-    console.error('Error deleting project:', error);
-    showNotification('Error deleting project: ' + error.message, 'error');
-  } finally {
-    setLoadingState(false);
+    showNotification('Error removing image: ' + error.message, 'error');
   }
 }
 
-function resetForm() {
-  document.getElementById('projectForm').reset();
-  document.getElementById('imagePreview').innerHTML = '';
-  document.querySelector('.btn-text').textContent = 'Create Project';
-  document.getElementById('form-header').textContent = 'Create New Project';
-  editMode = false;
-  editingProjectId = null;
-  selectedImages = [];
-  validateForm();
-}
-
-function setLoadingState(isLoading) {
-  const btnText = document.querySelector('.btn-text');
-  const btnLoading = document.querySelector('.btn-loading');
-  
-  if (isLoading) {
-    btnText.style.display = 'none';
-    btnLoading.style.display = 'inline';
-    document.getElementById('submitBtn').disabled = true;
-  } else {
-    btnText.style.display = 'inline';
-    btnLoading.style.display = 'none';
-    validateForm();
-  }
-}
-
-function showNotification(message, type = 'success') {
-  ons.notification[type === 'error' ? 'toast' : 'toast']({
-    message: message,
-    timeout: 4000
-  });
-}
-
+// Extract storage path from public URL
 function extractStoragePath(url) {
   try {
     const parts = url.split('/storage/v1/object/public/project-images/');
@@ -390,10 +275,106 @@ function extractStoragePath(url) {
   }
 }
 
-// Global functions
+// Delete a project and all its images
+async function deleteProject(projectId) {
+  if (!confirm('Delete this project and all its images?')) return;
+
+  setLoadingState(true);
+
+  try {
+    // Step 1: Get all images for this project
+    const { data: images, error: imagesError } = await client
+      .from('project_images')
+      .select('id, image_url')
+      .eq('project_id', projectId);
+    
+    if (imagesError) throw imagesError;
+
+    // Step 2: Delete images from storage (one by one, similar to removeImage)
+    if (images && images.length > 0) {
+      for (let image of images) {
+        const filePath = extractStoragePath(image.image_url);
+        if (filePath) {
+          const { error: storageError } = await client.storage.from('project-images').remove([filePath]);
+          if (storageError) console.error('Storage delete error for image:', image.id, storageError);
+        }
+      }
+    }
+
+    // Step 3: Delete the project (this will cascade delete project_images records)
+    const { error: projectError } = await client
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+    
+    if (projectError) throw projectError;
+
+    showNotification('Project and all associated images deleted successfully', 'success');
+    loadProjects();
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    showNotification('Error deleting project: ' + error.message, 'error');
+  } finally {
+    setLoadingState(false);
+  }
+}
+
+// Save or update an image label
+async function saveImageLabel(imageId) {
+  const labelInput = document.getElementById(`label-${imageId}`);
+  const newLabel = labelInput.value.trim();
+
+  try {
+    const { error } = await client
+      .from('project_images')
+      .update({ label: newLabel })
+      .eq('id', imageId);
+
+    if (error) throw error;
+    showNotification('Image label updated successfully.', 'success');
+    loadProjects();
+  } catch (error) {
+    console.error('Error saving image label:', error);
+    showNotification('Failed to save image label: ' + error.message, 'error');
+  }
+}
+
+function resetForm() {
+  projectForm.reset();
+  imagePreview.innerHTML = '';
+  btnText.textContent = 'Create Project';
+  editMode = false;
+  editingProjectId = null;
+}
+
+function setLoadingState(isLoading) {
+  if (isLoading) {
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline';
+    submitBtn.disabled = true;
+  } else {
+    btnText.style.display = 'inline';
+    btnLoading.style.display = 'none';
+    submitBtn.disabled = false;
+  }
+}
+
+function showNotification(message, type = 'success') {
+  const notification = document.getElementById('notification');
+  const messageEl = document.getElementById('notificationMessage');
+  notification.className = `notification ${type}`;
+  messageEl.textContent = message;
+  notification.classList.remove('hidden');
+  setTimeout(() => hideNotification(), 4000);
+}
+
+function hideNotification() {
+  document.getElementById('notification').classList.add('hidden');
+}
+
+// Expose global functions
 window.deleteProject = deleteProject;
 window.editProject = editProject;
-window.openLabelModal = openLabelModal;
-window.hideLabelModal = hideLabelModal;
+window.removeImage = removeImage;
+window.hideNotification = hideNotification;
 window.saveImageLabel = saveImageLabel;
-window.removeSelectedImage = removeSelectedImage;
