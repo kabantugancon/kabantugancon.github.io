@@ -403,6 +403,7 @@ body {
 
 .mobile-logo {
     width: 100%;
+    height: auto;
     max-width: none;
     display: flex;
     justify-content: center;
@@ -411,7 +412,7 @@ body {
 }
 
 .mobile-logo img {
-    max-height: 80px;
+    max-height: 80%;
     width: auto;
     max-width: 90%; /* Prevent overflow */
     object-fit: contain;
