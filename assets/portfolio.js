@@ -12,22 +12,68 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
-function initializeElements() {
-    projectsGrid = document.getElementById('projectsGrid');
-    filterButtons = document.querySelectorAll('.filter-button');
+// Floating Menu Functions
+function initializeFloatingMenu() {
+    const floatingMenuBtn = document.getElementById('floatingMenuBtn');
+    const floatingMenu = document.getElementById('floatingMenu');
+    const floatingMenuClose = document.getElementById('floatingMenuClose');
     
-    // Initialize mobile menu
-    const burger = document.querySelector('.navbar-burger');
-    const menu = document.querySelector('.navbar-menu');
-    
-    if (burger && menu) {
-        burger.addEventListener('click', () => {
-            burger.classList.toggle('is-active');
-            menu.classList.toggle('is-active');
+    if (floatingMenuBtn && floatingMenu && floatingMenuClose) {
+        // Open menu
+        floatingMenuBtn.addEventListener('click', openFloatingMenu);
+        
+        // Close menu
+        floatingMenuClose.addEventListener('click', closeFloatingMenu);
+        
+        // Close menu when clicking backdrop
+        floatingMenu.addEventListener('click', function(e) {
+            if (e.target === floatingMenu) {
+                closeFloatingMenu();
+            }
+        });
+        
+        // Close menu with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && floatingMenu.classList.contains('is-active')) {
+                closeFloatingMenu();
+            }
         });
     }
 }
 
+function openFloatingMenu() {
+    const floatingMenu = document.getElementById('floatingMenu');
+    const body = document.body;
+    
+    if (floatingMenu) {
+        floatingMenu.classList.add('is-active');
+        body.classList.add('menu-open');
+    }
+}
+
+function closeFloatingMenu() {
+    const floatingMenu = document.getElementById('floatingMenu');
+    const body = document.body;
+    
+    if (floatingMenu) {
+        floatingMenu.classList.remove('is-active');
+        body.classList.remove('menu-open');
+    }
+}
+
+
+
+function initializeElements() {
+    projectsGrid = document.getElementById('projectsGrid');
+    filterButtons = document.querySelectorAll('.filter-button');
+    
+    // Initialize floating menu
+    initializeFloatingMenu();
+    
+    // Remove old mobile menu initialization since we're replacing it
+}
+
+// Update the setupEventListeners function
 function setupEventListeners() {
     // Filter buttons
     filterButtons.forEach(button => {
@@ -46,20 +92,12 @@ function setupEventListeners() {
         });
     });
 
-    // Smooth scrolling for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    // Smooth scrolling for navigation links (desktop)
+    document.querySelectorAll('.navbar-menu .navbar-item').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                // Close mobile menu if open
-                const burger = document.querySelector('.navbar-burger');
-                const menu = document.querySelector('.navbar-menu');
-                if (burger && menu) {
-                    burger.classList.remove('is-active');
-                    menu.classList.remove('is-active');
-                }
-                
                 target.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
@@ -216,3 +254,7 @@ function initializeLightGallery() {
         });
     });
 }
+
+// Make functions global
+window.openFloatingMenu = openFloatingMenu;
+window.closeFloatingMenu = closeFloatingMenu;
