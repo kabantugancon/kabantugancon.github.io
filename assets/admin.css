@@ -7,28 +7,37 @@
     --goldenrod: #DDA90Eff;
     --vanilla: #F1DC9Bff;
     --grey-light: #f5f5f5;
+    --white: #ffffff;
+}
+
+/* Force light mode everywhere */
+body, html {
+    background-color: var(--grey-light) !important;
+    color: var(--black-olive) !important;
 }
 
 /* Global Styles */
 body {
-    background-color: #f8f8f8;
-    color: var(--black-olive);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
+    background-color: var(--grey-light) !important;
+    color: var(--black-olive) !important;
 }
 
 /* Layout */
 .admin-layout {
     display: flex;
     min-height: 100vh;
+    background-color: var(--grey-light) !important;
 }
 
 /* Sidebar */
 .sidebar {
     width: 280px;
-    background: white;
+    background: var(--white) !important;
     box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     padding: 2rem 1.5rem;
+    border-right: 1px solid #e0e0e0;
 }
 
 .sidebar-header {
@@ -55,25 +64,27 @@ body {
     padding: 1rem;
     margin-bottom: 0.5rem;
     border-radius: 8px;
-    color: var(--black-olive);
+    color: var(--black-olive) !important;
     text-decoration: none;
     transition: all 0.3s ease;
+    background-color: var(--white) !important;
 }
 
 .menu-item:hover {
-    background-color: var(--amber-light);
-    color: var(--black-olive);
+    background-color: var(--amber-light) !important;
+    color: var(--black-olive) !important;
 }
 
 .menu-item.is-active {
-    background-color: var(--amber);
-    color: var(--black-olive);
+    background-color: var(--amber) !important;
+    color: var(--black-olive) !important;
     font-weight: 600;
 }
 
 .menu-item .icon {
     margin-right: 0.75rem;
     width: 20px;
+    color: var(--black-olive) !important;
 }
 
 /* Main Content */
@@ -81,6 +92,7 @@ body {
     flex: 1;
     padding: 2rem;
     margin-left: 0;
+    background-color: var(--grey-light) !important;
 }
 
 @media (min-width: 1024px) {
@@ -91,9 +103,10 @@ body {
 
 /* Mobile Navigation */
 .mobile-nav {
-    background: white;
+    background: var(--white) !important;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     padding: 0.5rem 1rem;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .logo-mobile img {
@@ -103,15 +116,23 @@ body {
 .navbar-item {
     border-radius: 6px;
     margin: 0.25rem;
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
 }
 
 .navbar-item.is-active {
-    background-color: var(--amber);
+    background-color: var(--amber) !important;
+    color: var(--black-olive) !important;
+}
+
+.navbar-burger {
+    color: var(--black-olive) !important;
 }
 
 /* Tabs */
 .tab-content {
     display: none;
+    background-color: transparent !important;
 }
 
 .tab-content.is-active {
@@ -123,10 +144,17 @@ body {
     margin-bottom: 1.5rem;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
+    background-color: var(--white) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    background-color: var(--white) !important;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .card-header-title {
-    color: var(--black-olive);
+    color: var(--black-olive) !important;
     font-weight: 600;
 }
 
@@ -135,31 +163,65 @@ body {
     margin-right: 0.5rem;
 }
 
+.card-content {
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
+}
+
 /* Buttons */
 .button.is-amber {
-    background-color: var(--amber);
-    color: var(--black-olive);
+    background-color: var(--amber) !important;
+    color: var(--black-olive) !important;
     border: none;
     font-weight: 600;
 }
 
 .button.is-amber:hover {
-    background-color: var(--goldenrod);
-    color: var(--black-olive);
+    background-color: var(--goldenrod) !important;
+    color: var(--black-olive) !important;
 }
 
 .button.is-amber:active {
-    background-color: var(--amber-dark);
+    background-color: var(--amber-dark) !important;
 }
 
 /* Form Elements */
+.input, .textarea, .select select {
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
+    border-color: #dbdbdb !important;
+}
+
 .input:focus, .textarea:focus, .select select:focus {
-    border-color: var(--amber);
-    box-shadow: 0 0 0 0.125em rgba(254, 193, 9, 0.25);
+    border-color: var(--amber) !important;
+    box-shadow: 0 0 0 0.125em rgba(254, 193, 9, 0.25) !important;
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
 }
 
 .checkbox input[type="checkbox"]:checked + .icon-text .icon {
-    color: var(--amber);
+    color: var(--amber) !important;
+}
+
+.label {
+    color: var(--black-olive) !important;
+}
+
+.help {
+    color: var(--black-olive-2) !important;
+}
+
+/* File Input */
+.file-cta {
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
+    border-color: #dbdbdb !important;
+}
+
+.file-name {
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
+    border-color: #dbdbdb !important;
 }
 
 /* Image Preview */
@@ -175,6 +237,7 @@ body {
     object-fit: cover;
     border-radius: 8px;
     border: 2px solid var(--vanilla);
+    background-color: var(--white);
 }
 
 /* Projects Grid */
@@ -185,7 +248,7 @@ body {
 }
 
 .project-card {
-    background: white;
+    background: var(--white) !important;
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     border-left: 4px solid var(--amber);
@@ -195,10 +258,11 @@ body {
 .project-card-header {
     padding: 1.5rem;
     border-bottom: 1px solid #f0f0f0;
+    background-color: var(--white) !important;
 }
 
 .project-title {
-    color: var(--black-olive);
+    color: var(--black-olive) !important;
     margin-bottom: 0.5rem;
 }
 
@@ -217,23 +281,23 @@ body {
 }
 
 .project-category {
-    background: var(--vanilla);
-    color: var(--black-olive);
+    background: var(--vanilla) !important;
+    color: var(--black-olive) !important;
 }
 
 .project-status.completed {
-    background: #e8f5e8;
-    color: #2e7d32;
+    background: #e8f5e8 !important;
+    color: #2e7d32 !important;
 }
 
 .project-status.in-progress {
-    background: #fff3e0;
-    color: #ef6c00;
+    background: #fff3e0 !important;
+    color: #ef6c00 !important;
 }
 
 .project-status.planned {
-    background: #f5f5f5;
-    color: #666;
+    background: #f5f5f5 !important;
+    color: #666 !important;
 }
 
 .project-images-grid {
@@ -241,6 +305,7 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
     padding: 1.5rem;
+    background-color: var(--grey-light) !important;
 }
 
 @media (max-width: 768px) {
@@ -252,10 +317,11 @@ body {
 }
 
 .project-image-item {
-    background: var(--grey-light);
+    background: var(--white) !important;
     padding: 1rem;
     border-radius: 8px;
     text-align: center;
+    border: 1px solid #e0e0e0;
 }
 
 .project-image {
@@ -265,6 +331,7 @@ body {
     border-radius: 6px;
     margin-bottom: 0.75rem;
     cursor: pointer;
+    background-color: var(--white);
 }
 
 .image-label {
@@ -274,6 +341,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--black-olive) !important;
 }
 
 .image-actions {
@@ -285,6 +353,7 @@ body {
 .image-actions .button {
     padding: 0.4rem 0.6rem;
     font-size: 0.75rem;
+    background-color: var(--white) !important;
 }
 
 /* Notification */
@@ -295,16 +364,20 @@ body {
     z-index: 1000;
     max-width: 400px;
     animation: slideInRight 0.3s ease;
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .notification.is-success {
-    background-color: #28a745;
-    color: white;
+    background-color: #28a745 !important;
+    color: white !important;
 }
 
 .notification.is-danger {
-    background-color: #dc3545;
-    color: white;
+    background-color: #dc3545 !important;
+    color: white !important;
 }
 
 @keyframes slideInRight {
@@ -324,27 +397,60 @@ body {
     max-width: 500px;
 }
 
+.modal-content .box {
+    background-color: var(--white) !important;
+    color: var(--black-olive) !important;
+}
+
 #modalImageContainer img {
     width: 100%;
     max-height: 300px;
     object-fit: contain;
     border-radius: 8px;
+    background-color: var(--white);
+}
+
+.modal-background {
+    background-color: rgba(0,0,0,0.5) !important;
 }
 
 /* Loading States */
 .loading {
     text-align: center;
     padding: 3rem;
-    color: #666;
+    color: #666 !important;
+    background-color: transparent !important;
 }
 
 .no-projects {
     text-align: center;
     padding: 3rem;
-    color: #666;
-    background: var(--grey-light);
+    color: #666 !important;
+    background: var(--grey-light) !important;
     border-radius: 12px;
     border: 2px dashed #e0e0e0;
+}
+
+/* Text Colors */
+.has-text-dark {
+    color: var(--black-olive) !important;
+}
+
+.has-text-grey {
+    color: #666 !important;
+}
+
+.has-text-grey-dark {
+    color: var(--black-olive-2) !important;
+}
+
+/* Background Colors */
+.has-background-white {
+    background-color: var(--white) !important;
+}
+
+.has-background-light {
+    background-color: var(--grey-light) !important;
 }
 
 /* Mobile Optimizations */
@@ -403,4 +509,20 @@ body {
     .file-name {
         max-width: 150px;
     }
+}
+
+/* Ensure all text is visible and properly colored */
+.title, .subtitle, .card-header-title, .label, .help, .project-description, .project-details {
+    color: var(--black-olive) !important;
+}
+
+/* Tag styling */
+.tag {
+    background-color: var(--vanilla) !important;
+    color: var(--black-olive) !important;
+}
+
+.tag.is-primary {
+    background-color: var(--amber) !important;
+    color: var(--black-olive) !important;
 }
